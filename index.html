@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f7a6d">
+<title>东风日历</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f7a6d'/%3E%3Cpath d='M12 24h28a6 6 0 1 0-6-6M12 34h38a6 6 0 1 1-6 6M12 44h22' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="alerts" aria-live="assertive"></div>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="var(--brand)"/><path d="M12 24h28a6 6 0 1 0-6-6M12 34h38a6 6 0 1 1-6 6M12 44h22" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+    <div><b>东风日历</b><small id="subtitle"></small></div>
+  </div>
+  <div class="nav" id="nav"></div>
+  <button class="icon" data-act="settings" aria-label="设置">⚙︎</button>
+</header>
+<main id="main"></main>
+<div id="toast" role="status"></div>
+<div class="dock">
+  <div id="preview" class="preview"></div>
+  <form id="quick" autocomplete="off">
+    <input id="q" type="text" enterkeyhint="done" placeholder="一句话记约定：周三下午3点和蒋宇飞喝咖啡" aria-label="快速记录">
+    <button type="submit" class="primary" id="qbtn">记下</button>
+    <button type="button" class="ghost" data-act="new" aria-label="详细新建">＋</button>
+  </form>
+  <nav class="tabs" id="tabs">
+    <button data-view="brief">简报<i id="badge"></i></button>
+    <button data-view="day">日</button>
+    <button data-view="week">周</button>
+    <button data-view="month">月</button>
+    <button data-view="people">人物</button>
+  </nav>
+</div>
+<div id="sheet" class="sheet hidden"></div>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
