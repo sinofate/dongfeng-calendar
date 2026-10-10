@@ -1,7 +1,7 @@
 (function () {
   var KEY = "dfcal_ok";
   var PASS = "sinofate";
-  if (sessionStorage.getItem(KEY) === "1") return;
+  if (localStorage.getItem(KEY) === "1" || sessionStorage.getItem(KEY) === "1") return;
   document.documentElement.style.visibility = "hidden";
   function showGate() {
     var gate = document.createElement("div");
@@ -17,6 +17,7 @@
       var v = document.getElementById("login-pass").value || "";
       if (v === PASS) {
         sessionStorage.setItem(KEY, "1");
+        localStorage.setItem(KEY, "1");
         gate.remove();
       } else {
         document.getElementById("login-err").hidden = false;
