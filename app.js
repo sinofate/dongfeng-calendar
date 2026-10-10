@@ -17,7 +17,9 @@
     view: 'brief', sel: C.fmtDate(nowFn()), person: null, peopleQ: '',
     fired: LS.get('dfc.fired', {}), alerts: LS.get('dfc.alerts', []), snooze: LS.get('dfc.snooze', {}),
   };
-  const save = () => { LS.set('dfc.v1', { events: S.events, settings: S.settings }); LS.set('dfc.fired', S.fired); LS.set('dfc.alerts', S.alerts); LS.set('dfc.snooze', S.snooze); };
+  // agent 事件（events.json）：S.remote 为仓库原始数据；本地对其改动存入覆盖表 dfc.agentOv，不写入 dfc.v1
+  S.remote = []; S.agentOv = LS.get('dfc.agentOv', {}); S.agentSeen = LS.get('dfc.agentSeen', {}); let remoteJSON = null;
+  const save = () => { if (remoteJSON !== null) S.agentOv = C.diffAgent(S.events, S.remote, S.agentOv); LS.set('dfc.agentOv', S.agentOv); LS.set('dfc.agentSeen', S.agentSeen); LS.set('dfc.v1', { events: S.events.filter(e => e.source !== 'agent'), settings: S.settings }); LS.set('dfc.fired', S.fired); LS.set('dfc.alerts', S.alerts); LS.set('dfc.snooze', S.snooze); };
   const byId = id => S.events.find(e => e.id === id);
 
   // ---------- 格式化 ----------
@@ -415,6 +417,25 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); render(); } });
 
   // ---------- 启动 ----------
-  render(); tick(); setInterval(tick, 15000); setInterval(() => { if (!document.hidden && !ed && ['brief', 'day', 'week'].includes(S.view) && document.activeElement !== q && !(document.activeElement && document.activeElement.tagName === 'TEXTAREA') && ![...document.querySelectorAll('textarea.fu')].some(x => x.value)) { const y = window.scrollY; render(); window.scrollTo(0, y); } }, 60000);
-  window.__dfc = { S, C, tick, render, save, openEditor, addEvent: ev => { S.events.push(ev); save(); render(); } };
+  // ---------- 从 events.json 同步 agent 事件（失败静默） ----------
+  function applyRemote(arr, txt) {
+    if (txt === remoteJSON) return false;
+    if (ed) return false; // 编辑中不打断，下个周期再合并
+    if (remoteJSON !== null) S.agentOv = C.diffAgent(S.events, S.remote, S.agentOv); // 先固化当前内存里的本地改动
+    S.remote = arr; remoteJSON = txt;
+    S.events = C.mergeAgent(S.events, S.remote, S.agentOv);
+    const now = nowFn();
+    for (const ev of S.events) if (ev.source === 'agent' && !S.agentSeen[ev.id]) { S.agentSeen[ev.id] = 1; C.markPastFired(ev, now, S.fired); }
+    save(); return true;
+  }
+  function syncRemote() {
+    if (typeof fetch !== 'function') return Promise.resolve();
+    return fetch('events.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(txt => {
+      const arr = JSON.parse(txt); if (!Array.isArray(arr)) return;
+      if (applyRemote(arr, txt)) { tick(); render(); }
+    }).catch(() => { });
+  }
+  window.addEventListener('focus', () => { if (!document.hidden) syncRemote(); });
+  render(); tick(); setInterval(tick, 15000); syncRemote(); setInterval(syncRemote, 60000); setInterval(() => { if (!document.hidden && !ed && ['brief', 'day', 'week'].includes(S.view) && document.activeElement !== q && !(document.activeElement && document.activeElement.tagName === 'TEXTAREA') && ![...document.querySelectorAll('textarea.fu')].some(x => x.value)) { const y = window.scrollY; render(); window.scrollTo(0, y); } }, 60000);
+  window.__dfc = { S, C, syncRemote, tick, render, save, openEditor, addEvent: ev => { S.events.push(ev); save(); render(); } };
 })();

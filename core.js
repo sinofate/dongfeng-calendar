@@ -433,5 +433,40 @@
     return parts.join('');
   }
 
-  return { pad, fmtDate, parseDate, addDays, dayNum, startOfDay, WD, monIdx, cnNum, parse, buildEvent, matches, makeOcc, occurrencesInRange, occurrencesOn, conflictMap, findConflicts, dueReminders, markPastFired, reminderTime, pendingFollowups, reminderLabel, toICS, splitWho, describe, DEFAULT_REMINDERS, isTimedEvent, overlap };
+
+  // ---------- agent 事件（events.json）合并 ----------
+  // 远程(agent)事件 + 本地事件合并：以 id 去重；对 agent 事件的本地改动（确认/删除/完成/跟进/编辑）记入覆盖表 ov，不写回仓库
+  const clone = x => JSON.parse(JSON.stringify(x));
+  function mergeAgent(local, remote, ov) {
+    ov = ov || {};
+    const ids = new Set((local || []).filter(e => e.source !== 'agent').map(e => e.id));
+    const out = (local || []).filter(e => e.source !== 'agent');
+    for (const r of (Array.isArray(remote) ? remote : [])) {
+      if (!r || typeof r !== 'object' || !r.id || !r.date || ids.has(r.id)) continue;
+      ids.add(r.id);
+      const o = ov[r.id] || {};
+      if (o.__deleted) continue;
+      const ev = Object.assign(buildEvent(Object.assign({}, clone(r), { source: 'agent' })), clone(o));
+      delete ev.__deleted; ev.source = 'agent';
+      out.push(ev);
+    }
+    return out;
+  }
+  /** 由当前内存事件与远程原始数据重新计算覆盖表 */
+  function diffAgent(events, remote, oldOv) {
+    const ov = {}; const cur = new Map((events || []).filter(e => e.source === 'agent').map(e => [e.id, e]));
+    for (const r of (Array.isArray(remote) ? remote : [])) {
+      if (!r || !r.id) continue;
+      const e = cur.get(r.id);
+      if (!e) { ov[r.id] = { __deleted: true }; continue; }
+      const base = buildEvent(Object.assign({}, clone(r), { source: 'agent' }));
+      const d = {};
+      for (const k of Object.keys(e)) if (k !== 'createdAt' && JSON.stringify(e[k]) !== JSON.stringify(base[k])) d[k] = clone(e[k]);
+      if (Object.keys(d).length) ov[r.id] = d;
+    }
+    // 远程里已不存在的 id 的旧覆盖：丢弃
+    return ov;
+  }
+
+  return { mergeAgent, diffAgent, pad, fmtDate, parseDate, addDays, dayNum, startOfDay, WD, monIdx, cnNum, parse, buildEvent, matches, makeOcc, occurrencesInRange, occurrencesOn, conflictMap, findConflicts, dueReminders, markPastFired, reminderTime, pendingFollowups, reminderLabel, toICS, splitWho, describe, DEFAULT_REMINDERS, isTimedEvent, overlap };
 });
