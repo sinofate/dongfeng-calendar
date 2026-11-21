@@ -1,0 +1,242 @@
+{
+  "case": "2026-11-21-bitcoin-ahr999-bottom",
+  "engine": "us3day-vertical-recovery",
+  "timeline": {
+    "duration_seconds": 109.051,
+    "vo_duration_seconds": 109.050604,
+    "fps": 30,
+    "main_stage": {
+      "x": 0,
+      "y": 312,
+      "width": 1080,
+      "height": 1128
+    },
+    "title_and_captions_outside_main_stage": true,
+    "total": 109.051,
+    "clock": "measured_vo_seconds"
+  },
+  "fonts": {
+    "family": "Noto Sans CJK SC",
+    "regular": "inputs/fonts/NotoSansCJK-Regular.ttc",
+    "bold": "inputs/fonts/NotoSansCJK-Bold.ttc",
+    "face_index": 2,
+    "substitute_forbidden": true
+  },
+  "subtitles": {
+    "path": "inputs/subtitles/main_LR90.ass",
+    "file": "inputs/subtitles/main_LR90.ass",
+    "historical_lr": 30,
+    "later_revision_lr": 90,
+    "margin_v": 370
+  },
+  "audio": {
+    "vo": "inputs/audio/vo_p1_s16le.wav",
+    "vo_duration_seconds": 109.050604,
+    "bgm_plan": "inputs/audio/bgm_plan.json",
+    "sfx_events": "inputs/audio/sfx_events.json",
+    "loudness": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true,
+      "e7y_project_said_i_lufs": -14.0,
+      "note": "This run's instruction is about -16 LUFS. The e7y project value -14 was not remeasured from final_v1 and is not applied."
+    }
+  },
+  "library_roots": {
+    "hf_components": "inputs/components"
+  },
+  "opening": {
+    "cover_until_seconds": 1.5,
+    "cover": "inputs/covers/cover_1080x1920.jpg",
+    "cut": "hard",
+    "component": {
+      "id": "hf_components:cover-push-3",
+      "variables": {
+        "image": "inputs/covers/cover_1080x1920.jpg",
+        "duration_seconds": 1.5,
+        "push_percent": 3,
+        "status": "reconstructed"
+      }
+    }
+  },
+  "shots": [
+    {
+      "id": "s01-cover",
+      "t0": 0.0,
+      "t1": 1.5,
+      "media": "inputs/covers/cover_1080x1920.jpg",
+      "component": {
+        "id": "hf_components:cover-push-3",
+        "variables": {
+          "image": "inputs/covers/cover_1080x1920.jpg",
+          "duration_seconds": 1.5,
+          "push_percent": 3,
+          "status": "reconstructed"
+        }
+      }
+    },
+    {
+      "id": "s01",
+      "t0": 1.5,
+      "t1": 16.518,
+      "media": "inputs/media/S01_makkler_btc_chart_21Nov2026.png",
+      "component": {
+        "id": "hf_components:number-pop-in",
+        "variables": {
+          "value": "55,298",
+          "unit": "2026-11-21 当日低点",
+          "lift": "standard",
+          "tone": "paper"
+        }
+      }
+    },
+    {
+      "id": "s02",
+      "t0": 16.518,
+      "t1": 27.26,
+      "media": "inputs/media/title_card_bg_071829.jpg",
+      "component": {
+        "id": "hf_components:kinetic-center-build",
+        "variables": {
+          "text": "值得关注 ≠ 已经见底",
+          "font_size": 72,
+          "entry_offset": 48,
+          "color": "#FFFFFF",
+          "font_weight": "700"
+        }
+      },
+      "media_note": "clean #071829 card; not an XP/Hyd photo"
+    },
+    {
+      "id": "s03",
+      "t0": 27.26,
+      "t1": 39.997,
+      "media": "inputs/media/S03_algoros_ahr999_bitstamp_chart.png",
+      "component": {
+        "id": "hf_components:number-pop-in",
+        "variables": {
+          "value": "0.228",
+          "unit": "2020-03-12 历史回算；当前逼近 0.23",
+          "lift": "standard",
+          "tone": "paper"
+        }
+      }
+    },
+    {
+      "id": "s04",
+      "t0": 39.997,
+      "t1": 47.07,
+      "media": "inputs/media/S03_owlchart_ahr999_bitstamp.png",
+      "component": {
+        "id": "hf_components:panel-reveal",
+        "variables": {
+          "title": "2011 年早期市场：约 0.15",
+          "width": "wide",
+          "tone": "ink",
+          "reveal": "fade"
+        }
+      }
+    },
+    {
+      "id": "s05",
+      "t0": 47.07,
+      "t1": 58.206,
+      "media": "inputs/media/title_card_bg_071829.jpg",
+      "component": {
+        "id": "hf_components:price-decline-56000-44800",
+        "variables": {
+          "start_price": 56000,
+          "end_price": 44800,
+          "scenario_label": "压力情景，不是预测底",
+          "duration_seconds": 11.136
+        }
+      },
+      "media_note": "clean #071829 card; not an XP/Hyd photo"
+    },
+    {
+      "id": "s06",
+      "t0": 58.206,
+      "t1": 72.717,
+      "media": "inputs/media/S06_bitmain_s21_official_spec.png",
+      "component": {
+        "id": "hf_components:panel-reveal",
+        "variables": {
+          "title": "六美分／度电 · 约五万四美元／枚（仅电费估算）",
+          "width": "wide",
+          "tone": "ink",
+          "reveal": "fade"
+        }
+      }
+    },
+    {
+      "id": "s07",
+      "t0": 72.717,
+      "t1": 89.859,
+      "media": "inputs/media/S07_farside_etf_table_19Nov2026.png",
+      "component": {
+        "id": "hf_components:number-pop-in",
+        "variables": {
+          "value": "约 5.8 亿",
+          "unit": "美元净流出 · 2026-11-19；比较的是金额",
+          "lift": "standard",
+          "tone": "paper"
+        }
+      }
+    },
+    {
+      "id": "s08",
+      "t0": 89.859,
+      "t1": 99.932,
+      "media": "inputs/media/title_card_bg_071829.jpg",
+      "component": {
+        "id": "hf_components:kinetic-center-build",
+        "variables": {
+          "text": "观察：五日资金净流向／回踩低点能否守住",
+          "font_size": 72,
+          "entry_offset": 40,
+          "color": "#FFFFFF",
+          "font_weight": "700"
+        }
+      },
+      "media_note": "clean #071829 card; not an XP/Hyd photo"
+    },
+    {
+      "id": "s09",
+      "t0": 99.932,
+      "t1": 109.051,
+      "media": "inputs/media/title_card_bg_071829.jpg",
+      "component": {
+        "id": "hf_components:panel-reveal",
+        "variables": {
+          "title": "估值值得看；有人接，买点才更有说服力",
+          "width": "wide",
+          "tone": "ink",
+          "reveal": "fade"
+        }
+      },
+      "media_note": "clean #071829 card; not an XP/Hyd photo"
+    }
+  ],
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "source_corner_labels": false,
+    "yellow_outline": false
+  },
+  "picture": {
+    "still_motion": "contain_push",
+    "note": "Data plates are fitted inside the stage, then pushed 3.5% through a matte margin. Tables are not cropped. Cover uses its own 3% zoompan."
+  },
+  "titles": {
+    "l1": "是买点吗",
+    "l2": "见底还看有没有人接",
+    "layer": "cover_v3_lines_in_fixed_title_band",
+    "l1_color": "#FFD700",
+    "l2_color": "#FFFFFF",
+    "size_l1": 88,
+    "size_l2": 64,
+    "size_layer": "fixed_project_reconstruction"
+  }
+}

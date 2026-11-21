@@ -1,0 +1,35 @@
+{
+  "rec": {
+    "step": "e7y-claude-produce-v4",
+    "model": "claude-opus-5-5",
+    "resp_model": "claude-opus-5-5",
+    "http": 200,
+    "secs": 146.9,
+    "usage": {
+      "input_tokens": 6122,
+      "output_tokens": 8022,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0
+    },
+    "cost_usd": 0,
+    "note": "e7y 包月中转，不按次计费；失败须记录原错误，不得静默改走 OpenRouter",
+    "error_excerpt": null,
+    "stop_reason": "end_turn",
+    "content_text_len": 17208
+  },
+  "safe": {
+    "id": "resp_004d78ed65d42130016b014e97215c87d0939f21c65ae13963",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-opus-5-5",
+    "usage": {
+      "input_tokens": 6122,
+      "output_tokens": 8022,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0
+    },
+    "stop_reason": "end_turn",
+    "http": 200,
+    "content_text_len": 17208
+  }
+}

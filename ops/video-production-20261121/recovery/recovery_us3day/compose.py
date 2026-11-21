@@ -67,7 +67,7 @@ def _style_line(name, font, size, primary, outline_color, outline, shadow, align
     )
 
 
-def build_smoke_ass(ass_path: Path, start: float, end: float, shift: float, title_from: float) -> str:
+def build_smoke_ass(ass_path: Path, start: float, end: float, shift: float, title_from: float, titles: dict | None = None) -> str:
     parsed = parse_ass(ass_path)
     style = parsed.style
     if "WenQuanYi" in FAMILY or "Micro Hei" in FAMILY:
@@ -103,13 +103,15 @@ def build_smoke_ass(ass_path: Path, start: float, end: float, shift: float, titl
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     ]
+    title_l1 = (titles or {}).get("l1") or TITLE_DRAW["l1"]["text_observed"]
+    title_l2 = (titles or {}).get("l2") or TITLE_DRAW["l2"]["text_observed"]
     title_start = max(start, title_from)
     if title_start < end:
         lines.append(
-            f"Dialogue: 0,{format_ass_time(title_start - shift)},{format_ass_time(end - shift)},TitleY,,0,0,0,,{TITLE_DRAW['l1']['text_observed']}"
+            f"Dialogue: 0,{format_ass_time(title_start - shift)},{format_ass_time(end - shift)},TitleY,,0,0,0,,{title_l1}"
         )
         lines.append(
-            f"Dialogue: 0,{format_ass_time(title_start - shift)},{format_ass_time(end - shift)},TitleW,,0,0,0,,{TITLE_DRAW['l2']['text_observed']}"
+            f"Dialogue: 0,{format_ass_time(title_start - shift)},{format_ass_time(end - shift)},TitleW,,0,0,0,,{title_l2}"
         )
     for event in events_overlapping(parsed.events, start, end, kind="dialogue"):
         cue_start = max(event.start, start) - shift

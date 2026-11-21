@@ -115,6 +115,44 @@ def production_gaps(project: dict, catalog: dict | None = None) -> list[dict]:
     return gaps
 
 
+def _normalize_variables(entry: dict) -> dict:
+    variables = entry.get("variables")
+    if isinstance(variables, dict):
+        entry = dict(entry)
+        normalized = []
+        for key, spec in variables.items():
+            if isinstance(spec, dict):
+                item = {"id": key, "type": spec.get("type", "string"), "default": spec.get("default", "")}
+                item.update({k: v for k, v in spec.items() if k not in item})
+                normalized.append(item)
+            else:
+                normalized.append({"id": key, "type": "string", "default": spec})
+        entry["variables"] = normalized
+    return entry
+
+
+def catalog_for_project(catalog: dict, project: dict) -> dict:
+    merged = {"version": catalog.get("version"), "entries": [_normalize_variables(dict(entry)) for entry in catalog["entries"]]}
+    known = {entry["id"] for entry in merged["entries"]}
+    root_value = (project.get("library_roots") or {}).get("hf_components")
+    if not root_value:
+        return merged
+    root = _locate(str(root_value))
+    if not root.is_dir():
+        return merged
+    for registry in root.glob("*/registry-item.json"):
+        item = _normalize_variables(json.loads(registry.read_text(encoding="utf-8")))
+        item.setdefault("kind", "motion")
+        item.setdefault("library", "hf_components")
+        item.setdefault("name", registry.parent.name)
+        item.setdefault("id", f"hf_components:{item['name']}")
+        item.setdefault("status", "local_registry")
+        if item["id"] not in known:
+            merged["entries"].append(item)
+            known.add(item["id"])
+    return merged
+
+
 def produce(project: dict, catalog: dict, out_dir: Path) -> dict:
     """Write a gap report and no picture when any production slot is empty.
 
@@ -123,6 +161,13 @@ def produce(project: dict, catalog: dict, out_dir: Path) -> dict:
     a black frame.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
+    timeline = project.setdefault("timeline", {})
+    if "total" not in timeline and timeline.get("duration_seconds") is not None:
+        timeline["total"] = timeline["duration_seconds"]
+    subtitles = project.setdefault("subtitles", {})
+    if not subtitles.get("path") and subtitles.get("file"):
+        subtitles["path"] = subtitles["file"]
+    catalog = catalog_for_project(catalog, project)
     gaps = production_gaps(project, catalog)
     report = {
         "mode": "production",
@@ -199,43 +244,230 @@ def _component_call(project: dict, catalog: dict, shot: dict, total: float) -> d
     }
 
 
+def _shot_video_filter(index: int, shot: dict, duration: float, stage: dict, still_motion: str | None = None) -> str:
+    component_id = str((shot.get("component") or {}).get("id") or "")
+    frames = max(2, int(round(duration * 30)))
+    if component_id.endswith("cover-push-3"):
+        # One input frame. zoompan d= is frames-per-input-frame, so a looped still would multiply the shot.
+        return (
+            f"[{index}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            f"zoompan=z='1+0.03*on/{frames - 1}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"d={frames}:s=1080x1920:fps=30,format=yuv420p,setsar=1[v{index}]"
+        )
+    if still_motion == "contain_push":
+        # Fit the whole plate inside the stage, then push 3.5% through the matte margin so tables are not cropped.
+        inner_w = int(stage["w"] * 0.965)
+        inner_h = int(stage["h"] * 0.965)
+        return (
+            f"[{index}:v]scale={inner_w}:{inner_h}:force_original_aspect_ratio=decrease,"
+            f"pad={stage['w']}:{stage['h']}:(ow-iw)/2:(oh-ih)/2:color=0x071829,"
+            f"zoompan=z='1+0.035*on/{frames - 1}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"d={frames}:s={stage['w']}x{stage['h']}:fps=30,"
+            f"pad=1080:1920:{stage['x']}:{stage['y']}:color=0x071829,setsar=1[v{index}]"
+        )
+    return (
+        f"[{index}:v]trim=start=0:end={duration:.6f},setpts=PTS-STARTPTS,"
+        f"scale={stage['w']}:{stage['h']}:force_original_aspect_ratio=increase,"
+        f"crop={stage['w']}:{stage['h']},"
+        f"pad=1080:1920:{stage['x']}:{stage['y']}:color=0x071829,fps=30,setsar=1[v{index}]"
+    )
+
+
+def _bezier(p0, p1, p2, p3, count: int) -> list[tuple[float, float]]:
+    points = []
+    for index in range(count + 1):
+        t = index / count
+        u = 1 - t
+        x = u**3 * p0[0] + 3 * u**2 * t * p1[0] + 3 * u * t**2 * p2[0] + t**3 * p3[0]
+        y = u**3 * p0[1] + 3 * u**2 * t * p1[1] + 3 * u * t**2 * p2[1] + t**3 * p3[1]
+        points.append((x, y))
+    return points
+
+
+def _render_price_decline(output: Path, duration: float, variables: dict) -> None:
+    """Draw the attached component's own cubic, not a new market curve.
+
+    Path, guides, and stroke width come from price-decline-56000-44800.html:
+    M165 280 C320 315 375 385 505 435 S685 625 875 780, stroke 11, gold.
+    The draw runs from 10% to 75% of the shot, matching the component keyframes.
+    """
+    first = _bezier((165, 280), (320, 315), (375, 385), (505, 435), 90)
+    second = _bezier((505, 435), (635, 485), (685, 625), (875, 780), 90)
+    points = first[:-1] + second
+    boxes = []
+    for y in (260, 790):
+        x = 110
+        while x < 970:
+            boxes.append(f"drawbox=x={x}:y={y}:w=10:h=2:color=0x43536b@1:t=fill")
+            x += 22
+    for index, (x, y) in enumerate(points):
+        appear = duration * (0.10 + 0.65 * index / max(1, len(points) - 1))
+        left = int(round(x - 5))
+        top = int(round(y - 5))
+        boxes.append(
+            f"drawbox=x={left}:y={top}:w=11:h=11:color=0xFFD700@1:t=fill:enable='gte(t,{appear:.3f})'"
+        )
+    boxes.append("drawbox=x=152:y=267:w=26:h=26:color=0xFFD700@1:t=fill")
+    land = duration * 0.72
+    boxes.append(f"drawbox=x=859:y=764:w=32:h=32:color=0xFFD700@1:t=fill:enable='gte(t,{land:.3f})'")
+    filt = "scale=1080:1128,setsar=1," + ",".join(boxes)
+    proc = subprocess.run(
+        [
+            "ffmpeg", "-y", "-v", "error",
+            "-f", "lavfi", "-i", f"color=c=0x080d17:s=1080x1128:r=30:d={duration:.3f}",
+            "-vf", filt,
+            "-frames:v", str(max(2, int(round(duration * 30)))),
+            "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+            str(output),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-500:])
+
+
+def _ass_time_pair(start: float, end: float) -> tuple[str, str]:
+    return format_ass_time(start), format_ass_time(end)
+
+
+def _motion_overlay(project: dict, catalog: dict, shot: dict, total: float) -> dict | None:
+    component = shot.get("component") or {}
+    component_id = str(component.get("id") or "")
+    name = component_id.split(":")[-1]
+    variables = component.get("variables") or {}
+    t0 = float(shot["t0"])
+    t1 = float(shot["t1"])
+    resolved = resolve_component(catalog, shot, project.get("library_roots") or {})
+    base = {
+        "id": component_id,
+        "status": resolved.get("status"),
+        "variables": variables,
+        "sync": resolved.get("sync") or [],
+        "binding_layer": component.get("binding_layer") or "project_component",
+        "not_original_shot_source": bool(component.get("not_original_shot_source")),
+    }
+    if name == "cover-push-3":
+        base["rendered_as"] = "zoompan 1.00 to 1.03 over the cover, full frame, then hard cut"
+        base["ass_lines"] = []
+        return base
+    if name == "number-pop-in":
+        start, end = _ass_time_pair(min(t1, t0 + 0.45), t1)
+        text = str(variables.get("value", ""))
+        line = "Dialogue: 1,%s,%s,D,,0,0,560,,{\\fad(180,0)\\bord8\\3c&H00201807&\\c&H00FFFFFF&\\fs96}%s" % (start, end, text)
+        base["rendered_as"] = "catalog number-pop-in value, tone paper, pop fade"
+        base["ass_lines"] = [line]
+        return base
+    if name == "kinetic-center-build":
+        text = str(variables.get("text") or "")
+        words = text.split()
+        lines = []
+        lock = 1.2
+        if len(words) <= 1:
+            shown = text
+            slash = text.find("／")
+            if slash > 0 and len(text) > 16:
+                shown = text[: slash + 1] + r"\N" + text[slash + 1 :]
+            start, end = _ass_time_pair(t0, t1)
+            lines.append(
+                "Dialogue: 1,%s,%s,D,,0,0,640,,{\\fs64\\c&H00FFFFFF&\\bord6\\3c&H00201807&}%s" % (start, end, shown)
+            )
+        else:
+            # Each build step replaces the previous line. Overlapping copies stacked into three phrases.
+            for index in range(len(words)):
+                start_s = min(t1, t0 + lock * index / max(1, len(words)))
+                end_s = t1 if index == len(words) - 1 else min(t1, t0 + lock * (index + 1) / max(1, len(words)))
+                start, end = _ass_time_pair(start_s, end_s)
+                chunk = " ".join(words[: index + 1])
+                lines.append(
+                    "Dialogue: 1,%s,%s,D,,0,0,640,,{\\fs72\\c&H00FFFFFF&\\bord6\\3c&H00201807&}%s" % (start, end, chunk)
+                )
+        base["rendered_as"] = "catalog kinetic-center-build, phrase builds to phrase-locked"
+        base["ass_lines"] = lines
+        return base
+    if name == "panel-reveal":
+        start, end = _ass_time_pair(min(t1, t0 + 0.35), t1)
+        title = str(variables.get("title") or "")
+        line = "Dialogue: 1,%s,%s,D,,0,0,620,,{\\fad(400,0)\\fs48\\c&H00171717&\\bord12\\3c&H00FFFFFF&}%s" % (start, end, title)
+        base["rendered_as"] = "catalog panel-reveal title, tone ink, reveal fade"
+        base["ass_lines"] = [line]
+        return base
+    if name == "price-decline-56000-44800":
+        start, end = _ass_time_pair(t0, t1)
+        land, end_at = _ass_time_pair(t0 + (t1 - t0) * 0.72, t1)
+        label = str(variables.get("scenario_label") or "")
+        start_price = variables.get("start_price")
+        end_price = variables.get("end_price")
+        base["rendered_as"] = "attached component cubic from (165,280) through the written S control to (875,780); not a new market series"
+        # Positions are the component SVG text anchors, plus the stage top at y312.
+        base["ass_lines"] = [
+            "Dialogue: 1,%s,%s,D,,0,0,0,,{\\an8\\pos(540,348)\\fs42\\c&H00FFFFFF&\\bord0\\3c&H004A3527&\\shad0}%s" % (start, end, label),
+            "Dialogue: 1,%s,%s,D,,0,0,0,,{\\an7\\pos(165,537)\\fs60\\b1\\c&H00FFFFFF&\\bord0}约 %s" % (start, end, start_price),
+            "Dialogue: 1,%s,%s,D,,0,0,0,,{\\an7\\pos(610,1207)\\fs68\\b1\\c&H0000D7FF&\\bord0}约 %s" % (land, end_at, end_price),
+            "Dialogue: 1,%s,%s,D,,0,0,0,,{\\an7\\pos(165,1307)\\fs36\\c&H00E1D5CB&\\bord0}参考条件不变 · 压力测试" % (start, end),
+        ]
+        return base
+    call = _component_call(project, catalog, shot, total)
+    if not call:
+        return None
+    call["ass_lines"] = [call["ass_line"]]
+    return call
+
+
 def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) -> dict:
     fonts = resolve_noto((project.get("fonts") or {}).get("regular"), (project.get("fonts") or {}).get("bold"))
     shots = project["shots"]
     stage = RECONSTRUCTION["main_rect"]
-    ass_path = Path(project["subtitles"]["path"])
-    if not ass_path.is_absolute():
-        ass_path = ROOT / ass_path
+    ass_path = _locate(project["subtitles"]["path"])
     ass_file = out_dir / "production.ass"
     cover_until = float((project.get("opening") or {}).get("cover_until_seconds") or 0)
     ass_file.write_text(
-        build_smoke_ass(ass_path, 0, float(project["timeline"]["total"]), 0, cover_until),
+        build_smoke_ass(
+            ass_path,
+            0,
+            float(project["timeline"]["total"]),
+            0,
+            cover_until,
+            project.get("titles"),
+        ),
         encoding="utf-8",
     )
     component_calls = []
+    prepared = []
     for shot in shots:
-        if not (shot.get("component") or {}).get("id"):
-            continue
-        call = _component_call(project, catalog, shot, float(project["timeline"]["total"]))
-        if call:
-            component_calls.append(call)
+        shot = dict(shot)
+        component = shot.get("component") or {}
+        if str(component.get("id") or "").endswith("price-decline-56000-44800"):
+            plate = out_dir / f"{shot['id']}_price_decline.mp4"
+            _render_price_decline(plate, float(shot["t1"]) - float(shot["t0"]), component.get("variables") or {})
+            shot["media"] = str(plate)
+        prepared.append(shot)
+        if component.get("id"):
+            call = _motion_overlay(project, catalog, shot, float(project["timeline"]["total"]))
+            if call:
+                component_calls.append(call)
     if component_calls:
-        ass_file.write_text(ass_file.read_text(encoding="utf-8") + "\n".join(call["ass_line"] for call in component_calls) + "\n", encoding="utf-8")
+        extra = "\n".join(line for call in component_calls for line in call.get("ass_lines") or ([call["ass_line"]] if call.get("ass_line") else []))
+        if extra:
+            ass_file.write_text(ass_file.read_text(encoding="utf-8") + extra + "\n", encoding="utf-8")
     filters = []
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "verbose"]
-    for index, shot in enumerate(shots):
+    still_motion = (project.get("picture") or {}).get("still_motion")
+    for index, shot in enumerate(prepared):
         media = _locate(shot["media"])
         duration = float(shot["t1"]) - float(shot["t0"])
-        if media.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+        component_id = str((shot.get("component") or {}).get("id") or "")
+        one_frame = media.suffix.lower() in {".jpg", ".jpeg", ".png"} and (
+            component_id.endswith("cover-push-3") or still_motion == "contain_push"
+        )
+        if one_frame:
+            cmd.extend(["-i", str(media)])
+        elif media.suffix.lower() in {".jpg", ".jpeg", ".png"}:
             cmd.extend(["-loop", "1", "-framerate", "30", "-t", f"{duration:.6f}", "-i", str(media)])
         else:
             cmd.extend(["-i", str(media)])
-        filters.append(
-            f"[{index}:v]trim=start=0:end={duration:.6f},setpts=PTS-STARTPTS,"
-            f"scale={stage['w']}:{stage['h']}:force_original_aspect_ratio=increase,"
-            f"crop={stage['w']}:{stage['h']},"
-            f"pad=1080:1920:{stage['x']}:{stage['y']}:color=0x071829,fps=30,setsar=1[v{index}]"
-        )
+        filters.append(_shot_video_filter(index, shot, duration, stage, still_motion if one_frame else None))
     filters.append("".join(f"[v{index}]" for index in range(len(shots))) + f"concat=n={len(shots)}:v=1:a=0[cat]")
     filters.append(f"[cat]subtitles=filename='{ass_file}':fontsdir='{fonts['fontsdir']}'[vout]")
     vo = str(_locate(project["audio"]["vo"]))
@@ -257,8 +489,12 @@ def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) ->
         if row.get("fade_in"):
             fades += f",afade=t=in:st=0:d={float(row['fade_in'])}"
         if row.get("fade_out"):
-            start = float(row.get("fade_out_start", float(row["end"]) - float(row["fade_out"])))
-            fades += f",afade=t=out:st={start}:d={float(row['fade_out'])}"
+            # fade_out_start in this case is a timeline second. afade runs on the trimmed clip, whose PTS starts at 0.
+            fade_at = float(row.get("fade_out_start", float(row["end"]) - float(row["fade_out"])))
+            if fade_at >= float(row["start"]):
+                fade_at -= float(row["start"])
+            fade_at = max(0.0, min(fade_at, max(0.0, length - 0.05)))
+            fades += f",afade=t=out:st={fade_at:.3f}:d={float(row['fade_out'])}"
         filters.append(
             f"[{next_input}:a]atrim=start={offset}:end={offset + length},asetpts=PTS-STARTPTS,"
             f"volume={gain}dB{fades},adelay={delay}|{delay}[m{next_input}]"

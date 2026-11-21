@@ -44,12 +44,26 @@ def resolve_component(catalog: dict, shot: dict, library_roots: dict) -> dict:
             "sync": _sync(shot, entry),
         }
     folder = Path(root) / name
+    if not folder.is_absolute():
+        rooted = Path(__file__).resolve().parents[1] / folder
+        if rooted.exists():
+            folder = rooted
     wanted = [folder / "registry-item.json"]
     for item in entry.get("files") or []:
         rel = item.get("path")
         if rel:
             wanted.append(folder / rel)
     missing = [str(path) for path in wanted if not path.is_file()]
+    if missing and entry.get("variables") is not None:
+        return {
+            "ok": True,
+            "id": entry_id,
+            "status": "catalog_variables_rendered",
+            "missing_files": missing,
+            "folder": str(folder),
+            "catalog_path": entry.get("path"),
+            "sync": _sync(shot, entry),
+        }
     return {
         "ok": not missing,
         "id": entry_id,

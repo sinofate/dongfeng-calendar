@@ -1,0 +1,30 @@
+{
+  "id": "hf_components:price-decline-56000-44800",
+  "name": "price-decline-56000-44800",
+  "status": "new; stress-scenario illustration",
+  "variables": {
+    "start_price": {
+      "type": "number",
+      "default": 56000
+    },
+    "end_price": {
+      "type": "number",
+      "default": 44800
+    },
+    "scenario_label": {
+      "type": "string",
+      "default": "压力情景，不是预测底"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 11.136
+    }
+  },
+  "files": [
+    {
+      "path": "price-decline-56000-44800.html",
+      "target": "main",
+      "type": "hyperframes:snippet"
+    }
+  ]
+}

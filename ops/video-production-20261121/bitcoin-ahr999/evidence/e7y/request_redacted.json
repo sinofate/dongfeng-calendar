@@ -1,0 +1,24 @@
+{
+  "endpoint": "https://e7y.com/v1/messages",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json",
+    "User-Agent": "bitcoin-ahr999-bottom-produce-v4-e7y",
+    "x-api-key": "<REDACTED>",
+    "anthropic-version": "2023-06-01"
+  },
+  "body": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 32000,
+    "system": "你是固定模板视频制作实现（us3day-vertical-recovery / produce）。只输出指定的完整文件块，勿寒暄勿解释勿改口播。失败也要在文件块里如实标缺件，不要改用其他模型或渠道。",
+    "messages": [
+      {
+        "role": "user",
+        "content": "<see prompt.md, 15372 chars>"
+      }
+    ],
+    "prompt_sha256": "6b287a9a031e39fb31a64a9bbd279dc8fe7041fc794ff9ff6dfa1f2352bdf49f",
+    "prompt_path": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/engine/produce-v4/prompt.md"
+  },
+  "started_hkt": "2026-11-21T15:56:06.029784+08:00"
+}

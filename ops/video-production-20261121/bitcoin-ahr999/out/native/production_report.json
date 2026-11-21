@@ -1,0 +1,249 @@
+{
+  "mode": "production",
+  "qualified": false,
+  "recovered_master": false,
+  "reference_plate_used": false,
+  "gaps": [],
+  "status": "production_composite",
+  "output": "out/native/production_not_reference.mp4",
+  "independent_ffmpeg_probe": false,
+  "component_calls": [
+    {
+      "id": "hf_components:cover-push-3",
+      "status": "resolved",
+      "variables": {
+        "image": "inputs/covers/cover_1080x1920.jpg",
+        "duration_seconds": 1.5,
+        "push_percent": 3,
+        "status": "reconstructed"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "zoompan 1.00 to 1.03 over the cover, full frame, then hard cut",
+      "ass_lines": []
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "value": "55,298",
+        "unit": "2026-11-21 当日低点",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog number-pop-in value, tone paper, pop fade",
+      "ass_lines": [
+        "Dialogue: 1,0:00:01.95,0:00:16.52,D,,0,0,560,,{\\fad(180,0)\\bord8\\3c&H00201807&\\c&H00FFFFFF&\\fs96}55,298"
+      ]
+    },
+    {
+      "id": "hf_components:kinetic-center-build",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "text": "值得关注 ≠ 已经见底",
+        "font_size": 72,
+        "entry_offset": 48,
+        "color": "#FFFFFF",
+        "font_weight": "700"
+      },
+      "sync": [
+        {
+          "id": "phrase-locked",
+          "phase": "in",
+          "offset_in_shot": 1.2,
+          "t": 17.718,
+          "inside_shot": true,
+          "layer": "catalog_offset_plus_shot_t0"
+        }
+      ],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog kinetic-center-build, phrase builds to phrase-locked",
+      "ass_lines": [
+        "Dialogue: 1,0:00:16.52,0:00:16.92,D,,0,0,640,,{\\fs72\\c&H00FFFFFF&\\bord6\\3c&H00201807&}值得关注",
+        "Dialogue: 1,0:00:16.92,0:00:17.32,D,,0,0,640,,{\\fs72\\c&H00FFFFFF&\\bord6\\3c&H00201807&}值得关注 ≠",
+        "Dialogue: 1,0:00:17.32,0:00:27.26,D,,0,0,640,,{\\fs72\\c&H00FFFFFF&\\bord6\\3c&H00201807&}值得关注 ≠ 已经见底"
+      ]
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "value": "0.228",
+        "unit": "2020-03-12 历史回算；当前逼近 0.23",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog number-pop-in value, tone paper, pop fade",
+      "ass_lines": [
+        "Dialogue: 1,0:00:27.71,0:00:40.00,D,,0,0,560,,{\\fad(180,0)\\bord8\\3c&H00201807&\\c&H00FFFFFF&\\fs96}0.228"
+      ]
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "title": "2011 年早期市场：约 0.15",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog panel-reveal title, tone ink, reveal fade",
+      "ass_lines": [
+        "Dialogue: 1,0:00:40.35,0:00:47.07,D,,0,0,620,,{\\fad(400,0)\\fs48\\c&H00171717&\\bord12\\3c&H00FFFFFF&}2011 年早期市场：约 0.15"
+      ]
+    },
+    {
+      "id": "hf_components:price-decline-56000-44800",
+      "status": "resolved",
+      "variables": {
+        "start_price": 56000,
+        "end_price": 44800,
+        "scenario_label": "压力情景，不是预测底",
+        "duration_seconds": 11.136
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "attached component cubic from (165,280) through the written S control to (875,780); not a new market series",
+      "ass_lines": [
+        "Dialogue: 1,0:00:47.07,0:00:58.21,D,,0,0,0,,{\\an8\\pos(540,348)\\fs42\\c&H00FFFFFF&\\bord0\\3c&H004A3527&\\shad0}压力情景，不是预测底",
+        "Dialogue: 1,0:00:47.07,0:00:58.21,D,,0,0,0,,{\\an7\\pos(165,537)\\fs60\\b1\\c&H00FFFFFF&\\bord0}约 56000",
+        "Dialogue: 1,0:00:55.09,0:00:58.21,D,,0,0,0,,{\\an7\\pos(610,1207)\\fs68\\b1\\c&H0000D7FF&\\bord0}约 44800",
+        "Dialogue: 1,0:00:47.07,0:00:58.21,D,,0,0,0,,{\\an7\\pos(165,1307)\\fs36\\c&H00E1D5CB&\\bord0}参考条件不变 · 压力测试"
+      ]
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "title": "六美分／度电 · 约五万四美元／枚（仅电费估算）",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog panel-reveal title, tone ink, reveal fade",
+      "ass_lines": [
+        "Dialogue: 1,0:00:58.56,0:01:12.72,D,,0,0,620,,{\\fad(400,0)\\fs48\\c&H00171717&\\bord12\\3c&H00FFFFFF&}六美分／度电 · 约五万四美元／枚（仅电费估算）"
+      ]
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "value": "约 5.8 亿",
+        "unit": "美元净流出 · 2026-11-19；比较的是金额",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog number-pop-in value, tone paper, pop fade",
+      "ass_lines": [
+        "Dialogue: 1,0:01:13.17,0:01:29.86,D,,0,0,560,,{\\fad(180,0)\\bord8\\3c&H00201807&\\c&H00FFFFFF&\\fs96}约 5.8 亿"
+      ]
+    },
+    {
+      "id": "hf_components:kinetic-center-build",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "text": "观察：五日资金净流向／回踩低点能否守住",
+        "font_size": 72,
+        "entry_offset": 40,
+        "color": "#FFFFFF",
+        "font_weight": "700"
+      },
+      "sync": [
+        {
+          "id": "phrase-locked",
+          "phase": "in",
+          "offset_in_shot": 1.2,
+          "t": 91.059,
+          "inside_shot": true,
+          "layer": "catalog_offset_plus_shot_t0"
+        }
+      ],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog kinetic-center-build, phrase builds to phrase-locked",
+      "ass_lines": [
+        "Dialogue: 1,0:01:29.86,0:01:39.93,D,,0,0,640,,{\\fs64\\c&H00FFFFFF&\\bord6\\3c&H00201807&}观察：五日资金净流向／\\N回踩低点能否守住"
+      ]
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "catalog_variables_rendered",
+      "variables": {
+        "title": "估值值得看；有人接，买点才更有说服力",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "sync": [],
+      "binding_layer": "project_component",
+      "not_original_shot_source": false,
+      "rendered_as": "catalog panel-reveal title, tone ink, reveal fade",
+      "ass_lines": [
+        "Dialogue: 1,0:01:40.28,0:01:49.05,D,,0,0,620,,{\\fad(400,0)\\fs48\\c&H00171717&\\bord12\\3c&H00FFFFFF&}估值值得看；有人接，买点才更有说服力"
+      ]
+    }
+  ],
+  "fontselect": [
+    "[Parsed_subtitles_53 @ 0x55d951f35980] fontselect: (Noto Sans CJK SC, 700, 0) -> NotoSansCJKsc-Bold, 2, NotoSansCJKsc-Bold"
+  ],
+  "loudness": {
+    "ok": true,
+    "method": "linear_gain_on_finished_mix",
+    "ratio_preserved": true,
+    "tail_trimmed": false,
+    "spec": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true,
+      "master_file_remeasured": false,
+      "documented_master_not_applied": {
+        "i_lufs": -14.0,
+        "true_peak_dbtp": -2.4,
+        "source": "SUBMIT_final_v1.md",
+        "note": "Document value only. final_v1.mp4 is not in this environment, so it was not measured again and is not this mix target."
+      }
+    },
+    "before": {
+      "ok": true,
+      "i_lufs": -16.23,
+      "true_peak_dbtp": -2.91,
+      "lra": 2.4,
+      "threshold_lufs": -26.49,
+      "duration_seconds": 109.051
+    },
+    "applied_gain_db": 0.23,
+    "peak_limited": false,
+    "after": {
+      "ok": true,
+      "i_lufs": -16.01,
+      "true_peak_dbtp": -2.69,
+      "lra": 2.4,
+      "threshold_lufs": -26.27,
+      "duration_seconds": 109.051
+    },
+    "true_peak_within_ceiling": true
+  },
+  "video_stream_sha256": "cce328fe994ca34798f3275102711ae4d44626e8560d00c800a56cd698ae6734",
+  "video_unchanged_from_pre_loudness_encode": true,
+  "note": "Encoded by recovery_us3day produce. Not the separate local ffmpeg probe. Not a restored 22-shot film. The burned master was not used as the picture."
+}

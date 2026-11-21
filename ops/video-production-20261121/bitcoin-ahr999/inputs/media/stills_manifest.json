@@ -1,0 +1,128 @@
+[
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S07_farside_etf_table_19Nov2026.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/farside_btc_etf.png",
+    "crop_box_ltrb": [
+      80,
+      80,
+      1320,
+      860
+    ],
+    "size": [
+      1240,
+      780
+    ],
+    "sha256": "04b9209948cd3d032bacede81feb32f1ffae6c4cf04e0ab448c5c2c54ec72fe6",
+    "bytes": 134580,
+    "note": "Farside official BTC ETF flow table; 19 Nov 2026 total -582.3; date visible",
+    "made_hkt": "2026-11-21T15:50:27.425087+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S01_makkler_btc_chart_21Nov2026.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/makkler_btc_usd.png",
+    "crop_box_ltrb": [
+      40,
+      80,
+      1360,
+      980
+    ],
+    "size": [
+      1320,
+      900
+    ],
+    "sha256": "b9dd30b5c7da527179be52904123d11efbe4afbacee26ad4c665c5ed2f3eac5b",
+    "bytes": 122639,
+    "note": "Makkler BTC page 21 Nov 2026 7:40 AM UTC; price 58136; day range 55298-62224; dated candle chart",
+    "made_hkt": "2026-11-21T15:50:27.559735+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S03_swolecharts_ahr999_21Nov2026.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/swolecharts_ahr999.png",
+    "crop_box_ltrb": [
+      40,
+      40,
+      1360,
+      1100
+    ],
+    "size": [
+      1320,
+      1060
+    ],
+    "sha256": "174299ba92314219ef087eb2befac13cd26eae4e0a9d19ffd5d95fe8c96e12d3",
+    "bytes": 199926,
+    "note": "Swolecharts 21 Nov 2026 AHR999 0.23, BTC 55763; Binance source; 2017-2026 chart",
+    "made_hkt": "2026-11-21T15:50:27.791811+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S03_algoros_ahr999_bitstamp_chart.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/algoros_ahr999.png",
+    "crop_box_ltrb": [
+      40,
+      40,
+      1360,
+      980
+    ],
+    "size": [
+      1320,
+      940
+    ],
+    "sha256": "13c52769c448ef51491224137492b4d67a66a129a62e0d4e339fe760ccdaac51",
+    "bytes": 120989,
+    "note": "algoros Bitstamp AHR999 chart; header today 0.26 (UTC close, not the 0.23 snapshot); historical dips visible",
+    "made_hkt": "2026-11-21T15:50:27.935521+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S03_owlchart_ahr999_bitstamp.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/owlchart_ahr999.png",
+    "crop_box_ltrb": [
+      40,
+      80,
+      1360,
+      1280
+    ],
+    "size": [
+      1320,
+      1200
+    ],
+    "sha256": "948c99919dd8b65a1c5ec15a35de457211da32317f3c89ad13854b55e6e21552",
+    "bytes": 217305,
+    "note": "OwlChart Bitstamp AHR999; today 0.235 / 56033; 2011+ chart; page has owlchart.com watermarks",
+    "made_hkt": "2026-11-21T15:50:28.157480+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S06_bitmain_s21_official_spec.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/bitmain_support_s21.png",
+    "crop_box_ltrb": [
+      200,
+      80,
+      1320,
+      1880
+    ],
+    "size": [
+      1120,
+      1800
+    ],
+    "sha256": "25386b7cb86bbf285545fa11290ea568d9a7bf5acfbb7ac0ee3fedd870e33f9c",
+    "bytes": 138048,
+    "note": "Official BITMAIN Support S21 Specification; 200 TH/s, 3500W, 17.5 J/TH; no product photo",
+    "made_hkt": "2026-11-21T15:50:28.291617+08:00"
+  },
+  {
+    "local_file": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/stills/S07_bloomingbit_sosovalue_widget.png",
+    "from_screenshot": "/workspace/pub/video-clone/cases/2026-11-21-bitcoin-ahr999-bottom/media/sourced/chrome/bloomingbit_etf.png",
+    "crop_box_ltrb": [
+      80,
+      40,
+      1100,
+      1500
+    ],
+    "size": [
+      1020,
+      1460
+    ],
+    "sha256": "e2758c6e27d0eeaeac97906418c769d68aa513b887dbd2487e562a782ed6e42a",
+    "bytes": 244985,
+    "note": "Secondary: Bloomingbit 20 Nov article with SoSoValue widget -582.19M; not the live sosovalue.com page",
+    "made_hkt": "2026-11-21T15:50:28.487697+08:00"
+  }
+]

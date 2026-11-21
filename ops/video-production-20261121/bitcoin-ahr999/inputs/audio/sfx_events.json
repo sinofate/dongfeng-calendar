@@ -1,0 +1,49 @@
+{
+  "events": [
+    {
+      "id": "sfx_legacy:whoosh_s",
+      "file": "inputs/audio/sfx/whoosh_s.wav",
+      "t0": 1.5,
+      "duration_seconds": 0.45,
+      "shot": "s01",
+      "purpose": "cover-to-chart hard cut",
+      "t_peak": 1.5,
+      "gain_db": -10
+    },
+    {
+      "id": "sfx_semantic:tech_ui_bleep_notify_03",
+      "file": "inputs/audio/sfx/tech_ui_bleep_notify_03.wav",
+      "t0": 37.94,
+      "duration_seconds": 0.392,
+      "shot": "s03",
+      "purpose": "0.228 number land",
+      "t_peak": 37.94,
+      "gain_db": -10
+    },
+    {
+      "id": "sfx_semantic:tech_ui_bleep_notify_03",
+      "file": "inputs/audio/sfx/tech_ui_bleep_notify_03.wav",
+      "t0": 65.74,
+      "duration_seconds": 0.392,
+      "shot": "s06",
+      "purpose": "五万四 number land",
+      "t_peak": 65.74,
+      "gain_db": -10
+    },
+    {
+      "id": "sfx_semantic:tech_ui_bleep_notify_03",
+      "file": "inputs/audio/sfx/tech_ui_bleep_notify_03.wav",
+      "t0": 77.58,
+      "duration_seconds": 0.392,
+      "shot": "s07",
+      "purpose": "五亿八千万 number land",
+      "t_peak": 77.58,
+      "gain_db": -10
+    }
+  ],
+  "disabled_shots": [
+    "s02",
+    "s04",
+    "s09"
+  ]
+}
