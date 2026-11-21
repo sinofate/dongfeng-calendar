@@ -1,0 +1,49 @@
+{
+  "recovered_master": false,
+  "status": "smoke_composite_on_reference_plate",
+  "acceptance_recovered_film": false,
+  "reason": "Original clips and vo_raw are absent. The stage shows a crop of the low-bitrate reference. Source lines baked into that plate and into the cover JPEG are still in those pixels; this compositor does not draw them.",
+  "opening": {
+    "output": "/tmp/us3day-smoke2/smoke_opening_not_recovered_master.mp4",
+    "ass": "/tmp/us3day-smoke2/smoke_opening_not_recovered_master.ass",
+    "sha256": "6f2d077d5801e2a71cbde01fe47f039814d58aecbcdad2f1703a7f98896e7e2f",
+    "reference_sha256": "fe69c7509c1d5e1252c2719092b00abf62dfac65187419a987b28a403a2c312a",
+    "same_bytes_as_reference": false,
+    "width": 1080,
+    "height": 1920,
+    "fps": "30/1",
+    "video_duration": 4.0,
+    "audio_duration": 4.0,
+    "recovered_master": false,
+    "plate": "cover_then_reference_crop",
+    "audio": "reference_mix_trim_not_a_new_mix",
+    "encode": "smoke_ultrafast_crf18_not_master_recipe",
+    "ffmpeg_log": "/tmp/us3day-smoke2/smoke_opening_not_recovered_master.ffmpeg.log"
+  },
+  "s12_comment_window": {
+    "output": "/tmp/us3day-smoke2/smoke_s12_comment_window_not_recovered_master.mp4",
+    "ass": "/tmp/us3day-smoke2/smoke_s12_comment_window_not_recovered_master.ass",
+    "sha256": "ac67dda4bcc090b7f44ec51ba017e20fe5fb34d2d67b4560d2e32261f055455e",
+    "reference_sha256": "fe69c7509c1d5e1252c2719092b00abf62dfac65187419a987b28a403a2c312a",
+    "same_bytes_as_reference": false,
+    "width": 1080,
+    "height": 1920,
+    "fps": "30/1",
+    "video_duration": 1.1,
+    "audio_duration": 1.1,
+    "recovered_master": false,
+    "plate": "reference_crop_not_original_clip",
+    "audio": "reference_mix_trim_not_a_new_mix",
+    "encode": "smoke_ultrafast_crf18_not_master_recipe",
+    "ffmpeg_log": "/tmp/us3day-smoke2/smoke_s12_comment_window_not_recovered_master.ffmpeg.log"
+  },
+  "band_yellow_counts": {
+    "opening_t2.5_title_yellow": 3139,
+    "opening_t2.5_subtitle_yellow": 7487,
+    "s12_t66.4_title_yellow": 3205,
+    "s12_t66.4_subtitle_yellow": 0
+  },
+  "layout_layer": "reconstructed",
+  "revised_lr_locked": false,
+  "historical_lr_used_for_smoke": 30
+}

@@ -1,0 +1,10 @@
+{
+  "python": "3.12.3",
+  "ffmpeg": "6.1.1-3ubuntu5",
+  "ffprobe": "6.1.1-3ubuntu5",
+  "pip_packages": [],
+  "hyperframes": "0.8.181 documented only; not installed and not invoked",
+  "font_fallback": "WenQuanYi Micro Hei at /usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+  "font_requested": "Noto Sans CJK SC",
+  "checked_at": "2026-11-21"
+}
