@@ -1,0 +1,598 @@
+你是 AI 认知局固定模板（us3day-vertical-recovery / produce）的制作实现。只输出可被既有命令直接消费的完整文件，不要建议、不要重写口播、不要寒暄。
+
+既有渲染入口（不得改工具源码）：
+  cd /workspace/pub/ops/video-production-20261121/recovery-runtime
+  python3 -m recovery_us3day produce --project <本包 project JSON> --out <out>
+
+目标：一条可渲染的完整工程，片长以实测 VO 109.050604 秒为准（加 0–1.5s 封面仍叠同一条 VO，总时钟到 109.051，不要补到 3 分钟）。口播已锁定 script-v4，27 句文本与时间见 facts.json，禁止改字。
+
+必须遵守：
+- engine 字段必须是 "us3day-vertical-recovery"
+- 1080×1920 / 30fps；标题在上、字幕在下，都在主舞台外；主舞台重建矩形 y=312–1440；字幕 Style 与 later revision 一致：Noto Sans CJK SC，76，Bold=-1，Primary &H0000D7FF（#FFD700），Outline=5 黑，Shadow=3，Alignment=2，MarginL/R=90，MarginV=370。禁止粗黄描边、禁止正片来源角标。
+- 字体：Noto Sans CJK SC，TTC face_index=2，substitute_forbidden=true。路径写 inputs/fonts/NotoSansCJK-Regular.ttc 与 NotoSansCJK-Bold.ttc（cloud 将放置同 sha256 文件，不要改用文泉驿）。
+- 开场 0–1.5s 封面满幅 + 3% 轻推（重建，源码本已缺失），1.5s 硬切 S01 行情图。封面文件 inputs/covers/cover_1080x1920.jpg。
+- 音频：inputs/audio/vo_p1_s16le.wav；BGM 用已裁好的 excerpts（见 facts.json），xfade 1.5s；混音目标 I=-14 LUFS，TP≤-1.5 dBTP，人声段 gap 约 20 LU。
+- SFX 适度：1.5s 只用一次 whoosh_s；数字落板用 tech_ui_bleep_notify_03；S08 可用轻点 tick；S02/S04/S09 不要 SFX。没有把握就少挂，不要编不存在的文件。
+- 已有组件只准填 registry 变量：number-pop-in、kinetic-center-build、panel-reveal。kinetic 的 font_size=72 不是已锁定标题字号，须服从画面外标题规则。
+- 你必须新写两个组件的完整可调用源码（registry-item.json + 主 html snippet，结构对齐现有 hf_components：variables、files[].path/target/type=hyperframes:snippet）：
+  1) hf_components:cover-push-3 — 满幅封面 3% 轻推，0–1.5s，标重建。
+  2) hf_components:price-decline-56000-44800 — 约 56000→44800 价格下行，标注「压力情景，不是预测底」。不要复用 decline-chart 的 0–100 变量。
+- S02/S08/S09 可用字卡（component 或静态文字），不需要盘口视频。S06 只用官方规格表图 + 六美分/约五万四单卡，禁止第二档电价，禁止 S21 XP/Hyd 图。
+- 字幕 ASS：按 27 句口播切成每条不超过 15 个汉字的 Dialogue，时间对齐 facts.json 的 t0/t1，不得切掉尾字，句间保留气口。文本只能是口播原文的切分，不能改写。
+- project JSON 结构必须能被现有 produce 读取，字段对齐 representative.s04.json 的顶层：case, engine, timeline, fonts, subtitles, audio, library_roots, opening, shots, output。shots[] 每镜含 id,t0,t1,media,component{id,variables}。audio 含 vo, vo_duration_seconds, bgm_plan 路径, sfx_events 路径, loudness。opening.cover_until_seconds=1.5。output.source_corner_labels=false, yellow_outline=false, width=1080, height=1920, fps=30。
+- library_roots.hf_components 指向本包 inputs/components（须同时包含你新写的两个组件目录，以及调用到的已有组件的引用说明；已有组件源码不必重写，但 project 里的 component.id 必须是 catalog 能解析的 id，新组件也用 hf_components: 前缀）。
+- 路径一律使用本包相对路径，以 inputs/ 或文件名开头，不要写 /workspace 绝对路径进 produce 配置（可在 README 里注明源案卷绝对路径）。
+- 不要发明不存在的媒体文件。媒体只能用 facts.json 列出的 covers/media/audio。
+
+输出格式（严格按此块，每个文件完整，不要省略，不要 markdown 解释）：
+===FILE: project.bitcoin-ahr999.json===
+<完整 JSON>
+===FILE: inputs/subtitles/main_LR90.ass===
+<完整 ASS>
+===FILE: inputs/audio/bgm_plan.json===
+<完整 JSON>
+===FILE: inputs/audio/sfx_events.json===
+<完整 JSON>
+===FILE: inputs/components/cover-push-3/registry-item.json===
+<完整 JSON>
+===FILE: inputs/components/cover-push-3/cover-push-3.html===
+<完整 HTML/snippet>
+===FILE: inputs/components/price-decline-56000-44800/registry-item.json===
+<完整 JSON>
+===FILE: inputs/components/price-decline-56000-44800/price-decline-56000-44800.html===
+<完整 HTML/snippet>
+===FILE: PRODUCE_README.md===
+<最短生产步骤：如何把本包放到 recovery-runtime 旁或 --project 指向本 JSON 后执行 produce；列出必须拷贝的字体文件 sha256；不要改工具源码>
+
+下面是锁定事实 JSON（据此填，不要改口播和时间）：
+{
+  "case": "2026-11-21-bitcoin-ahr999-bottom",
+  "engine_must_be": "us3day-vertical-recovery",
+  "script": "script-v4.md",
+  "do_not_rewrite_script": true,
+  "vo": {
+    "file_for_produce": "inputs/audio/vo_p1_s16le.wav",
+    "original_case_file": "audio/vo_p1.wav",
+    "duration_seconds": 109.050604,
+    "sample_rate": 48000,
+    "channels": 2,
+    "format_note": "package copy is pcm_s16le; original delivery is pcm_f32le same duration",
+    "speed": 1.1,
+    "do_not_pad_to_3_minutes": true,
+    "gaps": {
+      "n": 26,
+      "min": 0.42,
+      "mean": 0.447,
+      "max": 0.49,
+      "lt040": 0
+    },
+    "gates": {
+      "clipped_tails": 0,
+      "swallowed_tails": 0
+    }
+  },
+  "opening": {
+    "cover_until_seconds": 1.5,
+    "cover_file": "inputs/covers/cover_1080x1920.jpg",
+    "cover_push_percent": 3,
+    "cover_push_status": "source_missing_reconstruct_and_supply_component"
+  },
+  "window_reconstructed": {
+    "canvas": [
+      1080,
+      1920
+    ],
+    "fps": 30,
+    "main_stage_y": [
+      312,
+      1440
+    ],
+    "main_stage_h": 1128,
+    "title_and_captions_outside_stage": true,
+    "margin_lr": 90,
+    "margin_v": 370,
+    "font": "Noto Sans CJK SC",
+    "face_index": 2,
+    "subtitle_fontsize": 76,
+    "primary_hex": "#FFD700",
+    "ass_primary": "&H0000D7FF",
+    "outline": 5,
+    "shadow": 3,
+    "alignment": 2,
+    "no_yellow_fat_outline": true,
+    "no_source_corner_labels": true
+  },
+  "loudness": {
+    "target_i_lufs": -14.0,
+    "true_peak_ceiling_dbtp": -1.5,
+    "speech_gap_lu": 20,
+    "source": "MIX_STANDARD"
+  },
+  "shots_measured": [
+    {
+      "id": "s01",
+      "paras": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "t0": 0.0,
+      "t1": 16.518,
+      "media": "inputs/media/S01_makkler_btc_chart_21Nov2026.png",
+      "note": "0-1.5s full cover then hard cut to this dated chart; show date and day low 55298 not only rebound 58136"
+    },
+    {
+      "id": "s02",
+      "paras": [
+        4,
+        5,
+        6
+      ],
+      "t0": 16.518,
+      "t1": 27.26,
+      "media": "TITLE_CARD_OK",
+      "note": "judgment typography only; no order-book clip"
+    },
+    {
+      "id": "s03",
+      "paras": [
+        7,
+        8,
+        9
+      ],
+      "t0": 27.26,
+      "t1": 39.997,
+      "media": "inputs/media/S03_algoros_ahr999_bitstamp_chart.png",
+      "alt": "inputs/media/S03_owlchart_ahr999_bitstamp.png",
+      "note": "Bitstamp historical; do not use algoros Today 0.26 as spoken 0.23; say 逼近 not 跌破"
+    },
+    {
+      "id": "s04",
+      "paras": [
+        10,
+        11
+      ],
+      "t0": 39.997,
+      "t1": 47.07,
+      "media": "inputs/media/S03_owlchart_ahr999_bitstamp.png",
+      "note": "2011 early market annotation; watermarks exist"
+    },
+    {
+      "id": "s05",
+      "paras": [
+        12,
+        13
+      ],
+      "t0": 47.07,
+      "t1": 58.206,
+      "media": "COMPONENT_price_decline",
+      "note": "56000 to 44800 stress scenario, not a predicted bottom; decline-chart 0-100 cannot be used as-is"
+    },
+    {
+      "id": "s06",
+      "paras": [
+        14,
+        15,
+        16
+      ],
+      "t0": 58.206,
+      "t1": 72.717,
+      "media": "inputs/media/S06_bitmain_s21_official_spec.png",
+      "note": "official spec table only; overlay 6-cent / 54000 card; do not use XP/Hyd photos; do not print official J/TH as the spoken electricity cost"
+    },
+    {
+      "id": "s07",
+      "paras": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "t0": 72.717,
+      "t1": 89.859,
+      "media": "inputs/media/S07_farside_etf_table_19Nov2026.png",
+      "note": "19 Nov 2026 total -582.3; must express comparison is of money amounts"
+    },
+    {
+      "id": "s08",
+      "paras": [
+        22,
+        23
+      ],
+      "t0": 89.859,
+      "t1": 99.932,
+      "media": "TITLE_CARD_OK",
+      "note": "two observation conditions list"
+    },
+    {
+      "id": "s09",
+      "paras": [
+        24,
+        25,
+        26
+      ],
+      "t0": 99.932,
+      "t1": 109.051,
+      "media": "TITLE_CARD_OK",
+      "note": "closing line then disclaimer; last chars 投资建议 must be complete"
+    }
+  ],
+  "bgm_excerpts": [
+    {
+      "shots": [
+        "s01",
+        "s02"
+      ],
+      "role": "hook",
+      "track_id": "bgm:pb569428",
+      "file": "inputs/audio/bgm_hook_pb569428_off8_31s.mp3",
+      "source_offset": 8.0,
+      "film": [
+        0.0,
+        27.26
+      ]
+    },
+    {
+      "shots": [
+        "s03",
+        "s04"
+      ],
+      "role": "body",
+      "track_id": "bgm:pb622408",
+      "file": "inputs/audio/bgm_data_s03s04_pb622408_off10_23s.mp3",
+      "source_offset": 10.0,
+      "film": [
+        27.26,
+        47.07
+      ]
+    },
+    {
+      "shots": [
+        "s05",
+        "s06"
+      ],
+      "role": "climax",
+      "track_id": "bgm:pb623319",
+      "file": "inputs/audio/bgm_risk_pb623319_off18_29s.mp3",
+      "source_offset": 18.0,
+      "film": [
+        47.07,
+        72.717
+      ]
+    },
+    {
+      "shots": [
+        "s07"
+      ],
+      "role": "body",
+      "track_id": "bgm:pb622408",
+      "file": "inputs/audio/bgm_data_s07_pb622408_off40_20s.mp3",
+      "source_offset": 40.0,
+      "film": [
+        72.717,
+        89.859
+      ]
+    },
+    {
+      "shots": [
+        "s08",
+        "s09"
+      ],
+      "role": "outro",
+      "track_id": "bgm:pb628035",
+      "file": "inputs/audio/bgm_outro_pb628035_off6_22s.mp3",
+      "source_offset": 6.0,
+      "film": [
+        89.859,
+        109.051
+      ]
+    }
+  ],
+  "xfade": 1.5,
+  "sfx": [
+    {
+      "id": "sfx_legacy:whoosh_s",
+      "file": "inputs/audio/sfx/whoosh_s.wav",
+      "duration": 0.45,
+      "when": "s01 cover hard cut 1.5s",
+      "max_whoosh_in_film": 1
+    },
+    {
+      "id": "sfx_semantic:tech_ui_bleep_notify_03",
+      "file": "inputs/audio/sfx/tech_ui_bleep_notify_03.wav",
+      "duration": 0.392,
+      "when": "number land s01 0.23, s03 0.228/0.23, s06 5.4万, s07 5.8亿"
+    },
+    {
+      "id": "sfx_semantic:tension_heartbeat_tick_single_04",
+      "file": "inputs/audio/sfx/tension_heartbeat_tick_single_04.wav",
+      "duration": 0.504,
+      "when": "s08 two conditions optional light ticks"
+    },
+    {
+      "disabled_shots": [
+        "s02",
+        "s04",
+        "s06_general",
+        "s09"
+      ]
+    }
+  ],
+  "components_existing": {
+    "number-pop-in": {
+      "variables": [
+        "value",
+        "unit",
+        "lift(close|standard|far)",
+        "tone(ink|paper|accent)"
+      ],
+      "dark_bg_tone": "paper"
+    },
+    "kinetic-center-build": {
+      "variables": [
+        "text",
+        "font_size 36-160 default 72 NOT a locked title size",
+        "entry_offset 20-160",
+        "color",
+        "font_weight 500|600|700|800"
+      ],
+      "syncPoint": "phrase-locked default 1.2s, recalibrate for Chinese word count"
+    },
+    "panel-reveal": {
+      "variables": [
+        "title",
+        "width narrow|standard|wide",
+        "tone paper|ink",
+        "reveal fade|solid"
+      ]
+    }
+  },
+  "components_to_write": [
+    {
+      "id": "hf_components:cover-push-3",
+      "purpose": "0-1.5s full-frame cover Ken Burns / push 3%, reconstructed ease, mark reconstructed",
+      "outputs": [
+        "registry-item.json",
+        "cover-push-3.html"
+      ]
+    },
+    {
+      "id": "hf_components:price-decline-56000-44800",
+      "purpose": "price path about 56000 to 44800, label stress scenario not predicted bottom; cannot reuse decline-chart 0-100",
+      "outputs": [
+        "registry-item.json",
+        "price-decline-56000-44800.html"
+      ]
+    }
+  ],
+  "sentences": [
+    {
+      "para": 0,
+      "text": "比特币跌到五万六千美元，有一个指标，我觉得值得拿出来聊聊。",
+      "t0": -0.0,
+      "t1": 3.56,
+      "last_char": "聊",
+      "gap_after": 0.42
+    },
+    {
+      "para": 1,
+      "text": "这个指标叫 Ahr999，通常也叫九神指数。",
+      "t0": 4.176,
+      "t1": 7.308,
+      "last_char": "数",
+      "gap_after": 0.43
+    },
+    {
+      "para": 2,
+      "text": "为了好理解，咱们就叫它抄底指数。",
+      "t0": 8.004,
+      "t1": 9.964,
+      "last_char": "数",
+      "gap_after": 0.45
+    },
+    {
+      "para": 3,
+      "text": "抄底指数已经掉到了零点二三附近，快到二零二零年三一二币灾时的位置了。",
+      "t0": 10.862,
+      "t1": 15.955,
+      "last_char": "了",
+      "gap_after": 0.44
+    },
+    {
+      "para": 4,
+      "text": "这算不算买点？",
+      "t0": 16.518,
+      "t1": 17.038,
+      "last_char": "点",
+      "gap_after": 0.44
+    },
+    {
+      "para": 5,
+      "text": "我的看法是，单看历史估值，这个位置已经值得认真关注了。",
+      "t0": 17.685,
+      "t1": 21.693,
+      "last_char": "了",
+      "gap_after": 0.47
+    },
+    {
+      "para": 6,
+      "text": "但五万六到底是不是底，还得看市场上的币卖出来，有没有人接。",
+      "t0": 22.345,
+      "t1": 25.73,
+      "last_char": "接",
+      "gap_after": 0.46
+    },
+    {
+      "para": 7,
+      "text": "零点二三到底有多少见？",
+      "t0": 27.26,
+      "t1": 27.72,
+      "last_char": "见",
+      "gap_after": 0.44
+    },
+    {
+      "para": 8,
+      "text": "从这份历史回算看，二零一七年到二零二五年，整整九年，低于零点二五的只有两天，都在二零二零年三月。",
+      "t0": 28.584,
+      "t1": 35.779,
+      "last_char": "月",
+      "gap_after": 0.45
+    },
+    {
+      "para": 9,
+      "text": "三月十二日大约零点二二八，跟现在已经很接近了。",
+      "t0": 36.583,
+      "t1": 39.389,
+      "last_char": "了",
+      "gap_after": 0.44
+    },
+    {
+      "para": 10,
+      "text": "再往前，二零一一年还到过零点一五附近。",
+      "t0": 39.997,
+      "t1": 43.086,
+      "last_char": "近",
+      "gap_after": 0.44
+    },
+    {
+      "para": 11,
+      "text": "当然，那时候比特币还很早期，跟今天差别很大。",
+      "t0": 43.748,
+      "t1": 46.428,
+      "last_char": "大",
+      "gap_after": 0.43
+    },
+    {
+      "para": 12,
+      "text": "我们就拿零点一五做个压力测试：假设现在模型里的参考条件不动，对应的币价大约四万四千八，比五万六还低两成。",
+      "t0": 47.07,
+      "t1": 54.518,
+      "last_char": "成",
+      "gap_after": 0.46
+    },
+    {
+      "para": 13,
+      "text": "这个可能的下跌空间，也得摆在桌面上。",
+      "t0": 55.306,
+      "t1": 57.542,
+      "last_char": "上",
+      "gap_after": 0.44
+    },
+    {
+      "para": 14,
+      "text": "有人可能会问，五万六都快跌到挖矿成本了，还能往哪儿跌？",
+      "t0": 58.206,
+      "t1": 61.902,
+      "last_char": "跌",
+      "gap_after": 0.45
+    },
+    {
+      "para": 15,
+      "text": "按一度电六美分估算，普通 S21 挖一枚光电费就要五万四美元左右，场租、维修和折旧还没算。",
+      "t0": 62.597,
+      "t1": 69.905,
+      "last_char": "算",
+      "gap_after": 0.45
+    },
+    {
+      "para": 16,
+      "text": "但这个成本只算矿机用电。",
+      "t0": 70.56,
+      "t1": 71.92,
+      "last_char": "电",
+      "gap_after": 0.44
+    },
+    {
+      "para": 17,
+      "text": "我更关心的是资金。",
+      "t0": 72.717,
+      "t1": 73.517,
+      "last_char": "金",
+      "gap_after": 0.47
+    },
+    {
+      "para": 18,
+      "text": "十一月十九日，美国现货比特币 ETF 一天净流出大约五亿八千万美元。",
+      "t0": 74.448,
+      "t1": 79.157,
+      "last_char": "元",
+      "gap_after": 0.46
+    },
+    {
+      "para": 19,
+      "text": "按当天币价算，这笔钱相当于二十一天新挖出来的币的价值。",
+      "t0": 79.906,
+      "t1": 83.606,
+      "last_char": "值",
+      "gap_after": 0.49
+    },
+    {
+      "para": 20,
+      "text": "这里比的是金额。",
+      "t0": 84.378,
+      "t1": 85.058,
+      "last_char": "额",
+      "gap_after": 0.45
+    },
+    {
+      "para": 21,
+      "text": "矿工可以关机器，市场上已经流通的币，照样有人卖。",
+      "t0": 85.935,
+      "t1": 89.132,
+      "last_char": "卖",
+      "gap_after": 0.45
+    },
+    {
+      "para": 22,
+      "text": "接下来，我会看两件事：ETF 连续五个交易日加起来，资金能不能转成净流入？",
+      "t0": 89.859,
+      "t1": 95.589,
+      "last_char": "入",
+      "gap_after": 0.44
+    },
+    {
+      "para": 23,
+      "text": "反弹之后，再回到这次低点附近，能不能守住？",
+      "t0": 96.262,
+      "t1": 99.136,
+      "last_char": "住",
+      "gap_after": 0.44
+    },
+    {
+      "para": 24,
+      "text": "估值低，说明这个位置值得看。",
+      "t0": 99.932,
+      "t1": 101.332,
+      "last_char": "看",
+      "gap_after": 0.42
+    },
+    {
+      "para": 25,
+      "text": "跌下来的时候有人接，这个买点才更有说服力。",
+      "t0": 101.981,
+      "t1": 104.566,
+      "last_char": "力",
+      "gap_after": 0.44
+    },
+    {
+      "para": 26,
+      "text": "以上只是市场数据分析和我的个人判断，不构成投资建议。",
+      "t0": 105.182,
+      "t1": 108.837,
+      "last_char": "议",
+      "gap_after": null
+    }
+  ],
+  "forbidden": [
+    "rewrite script",
+    "second electricity price tier",
+    "S21 XP/Hyd photo as standard S21",
+    "source corner labels",
+    "yellow fat outline",
+    "pad duration to 3 minutes",
+    "change speed 1.1",
+    "restore three reviews"
+  ]
+}

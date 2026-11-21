@@ -1,0 +1,30 @@
+{
+  "id": "hf_components:cover-push-3",
+  "name": "cover-push-3",
+  "status": "reconstructed; original source missing",
+  "variables": {
+    "image": {
+      "type": "string",
+      "default": "inputs/covers/cover_1080x1920.jpg"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 1.5
+    },
+    "push_percent": {
+      "type": "number",
+      "default": 3
+    },
+    "status": {
+      "type": "string",
+      "default": "reconstructed"
+    }
+  },
+  "files": [
+    {
+      "path": "cover-push-3.html",
+      "target": "main",
+      "type": "hyperframes:snippet"
+    }
+  ]
+}

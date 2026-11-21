@@ -1,0 +1,7 @@
+# No Python packages. The runner uses the standard library.
+# System tools exercised by the smoke command, pinned to the versions this
+# recovery was checked with:
+#   ffmpeg 6.1.1
+#   ffprobe 6.1.1
+# Historical per-shot renderer, not installed and not invoked. Shot HTML is missing.
+#   hyperframes 0.8.181

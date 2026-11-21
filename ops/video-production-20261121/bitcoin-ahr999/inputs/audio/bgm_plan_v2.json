@@ -1,0 +1,71 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 27.26,
+      "offset": 0,
+      "file": "inputs/audio/bgm_hook_pb569428_off8_31s.mp3",
+      "gain_db": -18,
+      "fade_in": 0.4,
+      "fade_out": 1.5,
+      "fade_out_start": 25.76,
+      "role": "hook",
+      "track_id": "bgm:pb569428",
+      "layer": "excerpt_rewritten_to_segments"
+    },
+    {
+      "start": 27.26,
+      "end": 47.07,
+      "offset": 0,
+      "file": "inputs/audio/bgm_data_s03s04_pb622408_off10_23s.mp3",
+      "gain_db": -18,
+      "fade_in": 1.5,
+      "fade_out": 1.5,
+      "fade_out_start": 45.57,
+      "role": "body",
+      "track_id": "bgm:pb622408",
+      "layer": "excerpt_rewritten_to_segments"
+    },
+    {
+      "start": 47.07,
+      "end": 72.717,
+      "offset": 0,
+      "file": "inputs/audio/bgm_risk_pb623319_off18_29s.mp3",
+      "gain_db": -18,
+      "fade_in": 1.5,
+      "fade_out": 1.5,
+      "fade_out_start": 71.217,
+      "role": "climax",
+      "track_id": "bgm:pb623319",
+      "layer": "excerpt_rewritten_to_segments"
+    },
+    {
+      "start": 72.717,
+      "end": 89.859,
+      "offset": 0,
+      "file": "inputs/audio/bgm_data_s07_pb622408_off40_20s.mp3",
+      "gain_db": -18,
+      "fade_in": 1.5,
+      "fade_out": 1.5,
+      "fade_out_start": 88.359,
+      "role": "body",
+      "track_id": "bgm:pb622408",
+      "layer": "excerpt_rewritten_to_segments"
+    },
+    {
+      "start": 89.859,
+      "end": 109.901,
+      "offset": 0,
+      "file": "inputs/audio/bgm_outro_pb628035_off6_22s.mp3",
+      "gain_db": -18,
+      "fade_in": 1.5,
+      "fade_out": 0.85,
+      "fade_out_start": 109.051,
+      "role": "outro",
+      "track_id": "bgm:pb628035",
+      "layer": "v2_fade_after_voice"
+    }
+  ],
+  "xfade_seconds": 1.5,
+  "voice_priority_gain_db": -18
+}

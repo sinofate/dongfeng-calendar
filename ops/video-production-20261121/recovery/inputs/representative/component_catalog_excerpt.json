@@ -1,0 +1,233 @@
+[
+  {
+    "id": "hf_components:count-up",
+    "kind": "motion",
+    "library": "hf_components",
+    "path": "/workspace/pub/video-clone/knowledge/motion-templates/hyperframes/registry/components/count-up/registry-item.json",
+    "name": "count-up",
+    "variables": [
+      {
+        "id": "start",
+        "type": "number",
+        "role": "content",
+        "label": "Start value",
+        "description": "First value shown by the count.",
+        "default": 0,
+        "step": 1
+      },
+      {
+        "id": "end",
+        "type": "number",
+        "role": "content",
+        "label": "End value",
+        "description": "Final value where the count lands.",
+        "default": 100,
+        "step": 1
+      },
+      {
+        "id": "prefix",
+        "type": "string",
+        "role": "content",
+        "label": "Prefix",
+        "description": "Optional text shown before the value.",
+        "default": ""
+      },
+      {
+        "id": "suffix",
+        "type": "string",
+        "role": "content",
+        "label": "Suffix",
+        "description": "Optional text shown after the value.",
+        "default": "%"
+      },
+      {
+        "id": "accent",
+        "type": "enum",
+        "role": "style",
+        "label": "Accent",
+        "description": "Color used by the count.",
+        "default": "green",
+        "options": [
+          {
+            "value": "green",
+            "label": "Green"
+          },
+          {
+            "value": "blue",
+            "label": "Blue"
+          },
+          {
+            "value": "violet",
+            "label": "Violet"
+          }
+        ]
+      },
+      {
+        "id": "glow",
+        "type": "boolean",
+        "role": "style",
+        "label": "Glow",
+        "description": "Optional soft accent glow under the count. Off by default.",
+        "default": false
+      },
+      {
+        "id": "exit",
+        "type": "enum",
+        "role": "timing",
+        "label": "Exit",
+        "description": "Optional departure. Default none: the landed value holds until the frame cuts.",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "None"
+          },
+          {
+            "value": "fade",
+            "label": "Fade"
+          },
+          {
+            "value": "up",
+            "label": "Up"
+          }
+        ]
+      }
+    ],
+    "syncPoints": [
+      {
+        "id": "count-land",
+        "phase": "in",
+        "offset": 1.72
+      }
+    ],
+    "files": [
+      {
+        "path": "count-up.html",
+        "target": "compositions/components/count-up.html",
+        "type": "hyperframes:snippet"
+      }
+    ],
+    "status": "source_present_not_render_tested"
+  },
+  {
+    "id": "hf_components:marker-highlight",
+    "kind": "motion",
+    "library": "hf_components",
+    "path": "/workspace/pub/video-clone/knowledge/motion-templates/hyperframes/registry/components/marker-highlight/registry-item.json",
+    "name": "marker-highlight",
+    "variables": [
+      {
+        "id": "text",
+        "type": "string",
+        "role": "content",
+        "label": "Text",
+        "description": "Full line of display text.",
+        "default": "Ship it with confidence"
+      },
+      {
+        "id": "emphasis_word",
+        "type": "string",
+        "role": "content",
+        "label": "Emphasis word",
+        "description": "First case-insensitive substring match in text receives the marker. Empty or unmatched draws no marker.",
+        "default": "confidence"
+      },
+      {
+        "id": "style",
+        "type": "enum",
+        "role": "style",
+        "label": "Marker style",
+        "description": "Shape of the hand-drawn marker stroke.",
+        "default": "highlight",
+        "options": [
+          {
+            "value": "highlight",
+            "label": "Highlight"
+          },
+          {
+            "value": "circle",
+            "label": "Circle"
+          },
+          {
+            "value": "underline",
+            "label": "Underline"
+          },
+          {
+            "value": "scribble",
+            "label": "Scribble"
+          }
+        ]
+      },
+      {
+        "id": "draw_at",
+        "type": "number",
+        "role": "timing",
+        "label": "Draw at",
+        "description": "Second (from mount start) the marker starts drawing. Clamped so the stroke completes before any exit.",
+        "default": 0.9,
+        "min": 0,
+        "step": 0.1,
+        "unit": "s"
+      },
+      {
+        "id": "accent",
+        "type": "enum",
+        "role": "style",
+        "label": "Accent",
+        "description": "Marker ink color from the contract token map.",
+        "default": "green",
+        "options": [
+          {
+            "value": "green",
+            "label": "Green"
+          },
+          {
+            "value": "blue",
+            "label": "Blue"
+          },
+          {
+            "value": "violet",
+            "label": "Violet"
+          }
+        ]
+      },
+      {
+        "id": "exit",
+        "type": "enum",
+        "role": "timing",
+        "label": "Exit",
+        "description": "Optional departure. Default none: the lockup holds until the frame cuts.",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "None"
+          },
+          {
+            "value": "fade",
+            "label": "Fade"
+          },
+          {
+            "value": "up",
+            "label": "Up"
+          }
+        ]
+      }
+    ],
+    "syncPoints": [
+      {
+        "id": "marker-draw",
+        "phase": "in",
+        "offset": 0.9
+      }
+    ],
+    "files": [
+      {
+        "path": "marker-highlight.html",
+        "target": "compositions/components/marker-highlight.html",
+        "type": "hyperframes:snippet"
+      }
+    ],
+    "status": "source_present_not_render_tested"
+  }
+]

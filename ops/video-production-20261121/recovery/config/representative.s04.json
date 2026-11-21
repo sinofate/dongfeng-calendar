@@ -1,0 +1,81 @@
+{
+  "case": "2026-11-07-us-3day-market-correct",
+  "engine": "us3day-vertical-recovery",
+  "span": "representative",
+  "recovered_master": false,
+  "not_the_independent_ffmpeg_probe": true,
+  "timeline": {
+    "fps": 30,
+    "total": 7.3,
+    "clock": "representative_local_seconds",
+    "source_shot": "s04",
+    "source_t0": 13.536,
+    "source_t1": 20.698
+  },
+  "fonts": {
+    "family": "Noto Sans CJK SC",
+    "regular": "inputs/fonts/NotoSansCJK-Regular.ttc",
+    "bold": "inputs/fonts/NotoSansCJK-Bold.ttc",
+    "face_index": 2,
+    "substitute_forbidden": true
+  },
+  "subtitles": {
+    "path": "inputs/representative/s04_rebased_LATER_LR90.ass",
+    "historical_copy": "inputs/representative/s04_rebased_HISTORICAL_LR30.ass",
+    "historical_lr": 30,
+    "later_revision_lr": 90,
+    "margin_v": 370
+  },
+  "audio": {
+    "vo": "inputs/representative/p03_ORIGINAL.mp3",
+    "vo_duration_seconds": 7.272,
+    "tail_policy": "keep the full p03 and extend the picture to 7.3s",
+    "bgm_plan": "inputs/representative/bgm_plan.s04.json",
+    "sfx_events": "inputs/representative/SFX_NONE.json",
+    "loudness": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true,
+      "note": "final_v1.mp4 is not in this checkout, so its loudness was not measured again. SUBMIT records I=-14.0 LUFS and TP=-2.4 dBTP as a document value only. This mix uses -16 LUFS with a -1.5 dBTP ceiling."
+    }
+  },
+  "library_roots": {
+    "hf_components": "inputs/representative/components"
+  },
+  "opening": {
+    "cover_until_seconds": 0
+  },
+  "shots": [
+    {
+      "id": "s04",
+      "t0": 0,
+      "t1": 7.3,
+      "source_t0": 13.536,
+      "source_t1": 20.698,
+      "media": "inputs/representative/phone_portfolio_mono.jpg",
+      "media_identity": "existing Image2.5 atmosphere, materials.md phone_portfolio_mono, not a burned master",
+      "component": {
+        "id": "hf_components:marker-highlight",
+        "binding_layer": "representative_library_call_not_original_shot_source",
+        "not_original_shot_source": true,
+        "why": "The supplied registry is marker-highlight. Its text is the existing s04 dialogue 电费够不够. Variables stay inside that registry. Storyboard motion for this shot was Kinetic and the original HTML is still missing, so this call is not a recovered s04 binding.",
+        "variables": {
+          "text": "电费够不够",
+          "emphasis_word": "电费",
+          "style": "underline",
+          "draw_at": 0.9,
+          "accent": "blue",
+          "exit": "none"
+        }
+      }
+    }
+  ],
+  "output": {
+    "source_corner_labels": false,
+    "yellow_outline": false,
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  }
+}

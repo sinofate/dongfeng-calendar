@@ -1,0 +1,20 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: TitleY,Noto Sans CJK SC,54,&H0000D7FF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,30,30,152,1
+Style: TitleW,Noto Sans CJK SC,42,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,8,30,30,240,1
+Style: D,Noto Sans CJK SC,76,&H0000D7FF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,5,3,2,30,30,370,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:01.50,0:00:04.00,TitleY,,0,0,0,,芯片砸掉三成
+Dialogue: 0,0:00:01.50,0:00:04.00,TitleW,,0,0,0,,见底了吗
+Dialogue: 0,0:00:01.50,0:00:01.93,D,,0,0,0,,选举结果出来那天美股大涨
+Dialogue: 0,0:00:01.93,0:00:03.06,D,,0,0,0,,第二天芯片才崩
+Dialogue: 0,0:00:03.06,0:00:04.00,D,,0,0,0,,半导体见底了吗，能不能抄

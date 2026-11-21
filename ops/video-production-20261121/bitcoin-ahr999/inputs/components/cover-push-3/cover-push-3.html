@@ -1,0 +1,25 @@
+<div class="cover-push-3" aria-label="重建封面轻推">
+  <img src="{{image}}" alt="" />
+</div>
+<style>
+  .cover-push-3 {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #090d17;
+  }
+  .cover-push-3 img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    animation: cover-push-3-move {{duration_seconds}}s ease-in-out both;
+  }
+  @keyframes cover-push-3-move {
+    from { transform: scale(1); }
+    to { transform: scale(1.03); }
+  }
+</style>

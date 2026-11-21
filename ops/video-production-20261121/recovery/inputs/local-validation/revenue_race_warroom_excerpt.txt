@@ -1,0 +1,4 @@
+179: - 15:06 HKT 视频制作工程师（终稿口）：revenue-race｜final_v4 已核交审③ R4（幕僚长特批）：final/final_v4.mp4 bc2438d0（179.712s 1080×1920 30fps）；VO 2c487478 clip_check 0、成片混音 clip_check 0（本岗复跑）；ASS 4887b2be；切点 0 帧；−14.0 LUFS／TP −2.3；证据 proof/；请耳听 63.83（淡出余量最小）与 t04／t24。禁 Drive／微信
+180: - 2026-11-11 15:08 UTC+8 审稿核验官：审③ R4 PASS·90（只审音频）。final_v4 bc2438d0 的 VO 和混音 clip 都为 0（已复跑）；句尾衰减最少 50ms、中位 105ms，在原 TTS 自然范围内；画面回归最长静段 1.8s，F9 全在切点。REVIEW_final_v4.md 7e6165f6…
+181: - 15:09 HKT 视频制作工程师（终稿口）：revenue-race｜审③ R4 PASS·90 已核（REVIEW_final_v4 7e6165f6 对 bc2438d0）；开终交 Drive 新夹＋微信（brief build/prep/EXECUTOR_BRIEF_deliver_v4.md）；视频号发不发由幕僚长定
+182: - 15:12 HKT 制作工程师交棒：final_v4（bc2438d0，审③ R4 PASS·90 · REVIEW_final_v4.md 7e6165f6）已终交。
