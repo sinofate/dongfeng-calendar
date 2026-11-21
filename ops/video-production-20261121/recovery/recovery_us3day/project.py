@@ -109,6 +109,12 @@ def build_project(timeline_path: Path = DEFAULT_TIMELINE, ass_path: Path = DEFAU
             "bgm_plan": None,
             "sfx_events": None,
             "reference_mix": "forbidden_in_production",
+            "loudness": {
+                "target_i_lufs": -16.0,
+                "true_peak_ceiling_dbtp": -1.5,
+                "layer": "reconstructed_technical_target",
+                "not_original_master_parameter": True,
+            },
         },
         "library_roots": {},
         "opening": {

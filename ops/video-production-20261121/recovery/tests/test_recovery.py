@@ -267,6 +267,14 @@ class SmokeTests(unittest.TestCase):
             self.assertTrue(present["ok"], present)
 
 
+class LoudnessTests(unittest.TestCase):
+    def test_linear_gain_keeps_ratio_and_peak_ceiling(self):
+        from recovery_us3day.produce import linear_gain_db
+
+        self.assertAlmostEqual(linear_gain_db(-32.4, -20.0, -16.0, -1.5), 16.4)
+        self.assertAlmostEqual(linear_gain_db(-32.4, -8.0, -16.0, -1.5), 6.5)
+
+
 class ProductionTests(unittest.TestCase):
     def test_unfilled_slots_write_no_film(self):
         project = build_project()

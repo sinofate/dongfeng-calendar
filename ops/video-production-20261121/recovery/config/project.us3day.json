@@ -99,17 +99,20 @@
       "font_fallback_forbidden": true,
       "l1": {
         "text_observed": "芯片砸掉三成",
-        "size": 54,
-        "top": 152,
+        "size": 88,
+        "top": 72,
         "fill": "#FFD700",
-        "outline": 0
+        "outline": 0,
+        "size_layer": "reconstructed_after_20261121_viewing",
+        "note": "Bright-core height on the master is about 56px. The local viewing of the 54px burn found the header too small, so the draw size fills the title band and stays above the stage."
       },
       "l2": {
         "text_observed": "见底了吗",
-        "size": 42,
-        "top": 238,
+        "size": 64,
+        "top": 188,
         "fill": "#FFFFFF",
-        "outline": 0
+        "outline": 0,
+        "size_layer": "reconstructed_after_20261121_viewing"
       },
       "sample_times_seconds": [
         2.0,
@@ -174,7 +177,13 @@
     "vo": null,
     "bgm_plan": null,
     "sfx_events": null,
-    "reference_mix": "forbidden_in_production"
+    "reference_mix": "forbidden_in_production",
+    "loudness": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true
+    }
   },
   "library_roots": {},
   "opening": {

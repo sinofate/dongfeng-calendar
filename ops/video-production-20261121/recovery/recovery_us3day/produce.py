@@ -278,34 +278,42 @@ def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) ->
         filters.append("[vo]aresample=48000[aout]")
     else:
         filters.append("".join(labels) + f"amix=inputs={len(labels)}:duration=first:dropout_transition=0:normalize=0[aout]")
-    output = out_dir / "production_not_reference.mp4"
-    cmd.extend(
-        [
-            "-filter_complex",
-            ";".join(filters),
-            "-map",
-            "[vout]",
-            "-map",
-            "[aout]",
-            "-r",
-            "30",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "ultrafast",
-            "-crf",
-            "18",
-            "-c:a",
-            "aac",
-            "-pix_fmt",
-            "yuv420p",
-            str(output),
-        ]
-    )
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    video_only = out_dir / "video_only.mp4"
+    premaster = out_dir / "premaster.wav"
+    split_cmd = cmd + [
+        "-filter_complex",
+        ";".join(filters),
+        "-map",
+        "[vout]",
+        "-an",
+        "-r",
+        "30",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        str(video_only),
+        "-map",
+        "[aout]",
+        "-c:a",
+        "pcm_s24le",
+        str(premaster),
+    ]
+    proc = subprocess.run(split_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     (out_dir / "production.ffmpeg.log").write_bytes(proc.stderr)
-    if proc.returncode != 0:
+    if proc.returncode != 0 or not video_only.is_file() or not premaster.is_file():
         report["status"] = "production_encode_failed"
+        report["qualified"] = False
+        return report
+    output = out_dir / "production_not_reference.mp4"
+    loudness = _apply_loudness(project, premaster, video_only, output, out_dir)
+    if not loudness.get("ok"):
+        report["status"] = "production_encode_failed"
+        report["loudness"] = loudness
         report["qualified"] = False
         return report
     log_text = (out_dir / "production.ffmpeg.log").read_text(encoding="utf-8", errors="replace")
@@ -319,6 +327,9 @@ def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) ->
         {key: value for key, value in call.items() if key != "ass_line"} for call in component_calls
     ]
     report["fontselect"] = fontselect
+    report["loudness"] = loudness
+    report["video_stream_sha256"] = _stream_sha256(output, "v")
+    report["video_unchanged_from_pre_loudness_encode"] = report["video_stream_sha256"] == _stream_sha256(video_only, "v")
     report["note"] = (
         "Encoded by recovery_us3day produce. Not the separate local ffmpeg probe. "
         "Not a restored 22-shot film. The burned master was not used as the picture."
@@ -327,4 +338,161 @@ def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) ->
         json.dumps(report, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    premaster.unlink(missing_ok=True)
+    video_only.unlink(missing_ok=True)
     return report
+
+
+def linear_gain_db(measured_i: float, measured_tp: float, target_i: float, tp_ceiling: float) -> float:
+    """One linear gain for the whole mix. Voice/BGM ratio stays as mixed."""
+    gain = target_i - measured_i
+    if measured_tp + gain > tp_ceiling:
+        gain = tp_ceiling - measured_tp
+    return gain
+
+
+def _loudness_spec(project: dict) -> dict:
+    spec = (project.get("audio") or {}).get("loudness") or {}
+    return {
+        "target_i_lufs": float(spec.get("target_i_lufs", -16.0)),
+        "true_peak_ceiling_dbtp": float(spec.get("true_peak_ceiling_dbtp", -1.5)),
+        "layer": spec.get("layer", "reconstructed_technical_target"),
+        "not_original_master_parameter": True,
+        "master_file_remeasured": False,
+        "documented_master_not_applied": {
+            "i_lufs": -14.0,
+            "true_peak_dbtp": -2.4,
+            "source": "SUBMIT_final_v1.md",
+            "note": "Document value only. final_v1.mp4 is not in this environment, so it was not measured again and is not this mix target.",
+        },
+    }
+
+
+def _measure_loudness(path: Path) -> dict:
+    proc = subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-i",
+            str(path),
+            "-af",
+            "loudnorm=print_format=json",
+            "-f",
+            "null",
+            "-",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    text = proc.stderr.decode("utf-8", "replace")
+    start = text.rfind("{")
+    end = text.rfind("}")
+    if proc.returncode != 0 or start < 0 or end < start:
+        return {"ok": False, "error": text[-400:]}
+    payload = json.loads(text[start : end + 1])
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            str(path),
+        ],
+        stdout=subprocess.PIPE,
+        check=False,
+    )
+    duration = None
+    if probe.returncode == 0:
+        duration = float(json.loads(probe.stdout.decode("utf-8"))["format"]["duration"])
+    return {
+        "ok": True,
+        "i_lufs": float(payload["input_i"]),
+        "true_peak_dbtp": float(payload["input_tp"]),
+        "lra": float(payload["input_lra"]),
+        "threshold_lufs": float(payload["input_thresh"]),
+        "duration_seconds": duration,
+    }
+
+
+def _stream_sha256(path: Path, kind: str) -> str:
+    proc = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(path), "-map", f"0:{kind}:0", "-f", "streamhash", "-hash", "sha256", "-"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    line = proc.stdout.decode("utf-8", "replace").strip()
+    return line.split("=", 1)[-1].strip()
+
+
+def _mux_gain(video: Path, wav: Path, output: Path, gain_db: float) -> bool:
+    proc = subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-v",
+            "error",
+            "-i",
+            str(video),
+            "-i",
+            str(wav),
+            "-filter:a",
+            f"volume={gain_db:.4f}dB",
+            "-map",
+            "0:v:0",
+            "-map",
+            "1:a:0",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            str(output),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return proc.returncode == 0 and output.is_file()
+
+
+def _apply_loudness(project: dict, premaster: Path, video_only: Path, output: Path, out_dir: Path) -> dict:
+    spec = _loudness_spec(project)
+    before = _measure_loudness(premaster)
+    if not before.get("ok"):
+        return {"ok": False, "stage": "measure_premaster", **before, "spec": spec}
+    gain = linear_gain_db(
+        before["i_lufs"],
+        before["true_peak_dbtp"],
+        spec["target_i_lufs"],
+        spec["true_peak_ceiling_dbtp"],
+    )
+    if not _mux_gain(video_only, premaster, output, gain):
+        return {"ok": False, "stage": "mux", "applied_gain_db": gain, "spec": spec}
+    after = _measure_loudness(output)
+    if not after.get("ok"):
+        return {"ok": False, "stage": "measure_output", "applied_gain_db": gain, "spec": spec}
+    limited_again = False
+    if after["true_peak_dbtp"] > spec["true_peak_ceiling_dbtp"]:
+        gain -= after["true_peak_dbtp"] - spec["true_peak_ceiling_dbtp"] + 0.3
+        limited_again = True
+        if not _mux_gain(video_only, premaster, output, gain):
+            return {"ok": False, "stage": "remux_peak", "applied_gain_db": gain, "spec": spec}
+        after = _measure_loudness(output)
+    return {
+        "ok": True,
+        "method": "linear_gain_on_finished_mix",
+        "ratio_preserved": True,
+        "tail_trimmed": False,
+        "spec": spec,
+        "before": before,
+        "applied_gain_db": round(gain, 4),
+        "peak_limited": before["true_peak_dbtp"] + (spec["target_i_lufs"] - before["i_lufs"]) > spec["true_peak_ceiling_dbtp"] or limited_again,
+        "after": after,
+        "true_peak_within_ceiling": after.get("true_peak_dbtp", 99) <= spec["true_peak_ceiling_dbtp"] + 0.05,
+    }

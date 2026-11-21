@@ -31,7 +31,14 @@
     "vo_duration_seconds": 7.272,
     "tail_policy": "keep the full p03 and extend the picture to 7.3s",
     "bgm_plan": "inputs/representative/bgm_plan.s04.json",
-    "sfx_events": "inputs/representative/SFX_NONE.json"
+    "sfx_events": "inputs/representative/SFX_NONE.json",
+    "loudness": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true,
+      "note": "final_v1.mp4 is not in this checkout, so its loudness was not measured again. SUBMIT records I=-14.0 LUFS and TP=-2.4 dBTP as a document value only. This mix uses -16 LUFS with a -1.5 dBTP ceiling."
+    }
   },
   "library_roots": {
     "hf_components": "inputs/representative/components"
