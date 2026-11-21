@@ -67,7 +67,7 @@ def _cmd_smoke(args: argparse.Namespace) -> int:
     ass_path = Path(args.ass)
     cover = Path(args.cover) if args.cover else None
     out_dir = Path(args.out)
-    fonts = resolve_noto()
+    fonts = resolve_noto(getattr(args, "font_regular", None), getattr(args, "font_bold", None))
     if not fonts["ok"]:
         report = {
             "qualified": False,
@@ -197,6 +197,8 @@ def build_parser() -> argparse.ArgumentParser:
     smoke.add_argument("--cover", type=Path, default=DEFAULT_COVER)
     smoke.add_argument("--out", type=Path, required=True)
     smoke.add_argument("--allow-reference-plate", action="store_true")
+    smoke.add_argument("--font-regular", default=None)
+    smoke.add_argument("--font-bold", default=None)
     smoke.set_defaults(func=_cmd_smoke)
 
     def _cmd_produce(args: argparse.Namespace) -> int:
@@ -204,7 +206,11 @@ def build_parser() -> argparse.ArgumentParser:
         catalog = load_catalog(args.catalog)
         report = produce(project, catalog, Path(args.out))
         print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 2 if report.get("gaps") else 0
+        if report.get("gaps"):
+            return 2
+        if report.get("status") == "production_encode_failed":
+            return 1
+        return 0
 
     produce_cmd = sub.add_parser("produce")
     produce_cmd.add_argument("--project", type=Path, default=DEFAULT_PROJECT)

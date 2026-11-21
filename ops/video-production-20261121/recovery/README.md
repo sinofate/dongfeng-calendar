@@ -26,6 +26,7 @@ python3 -m unittest tests/test_recovery.py
 
 ```sh
 python3 -m recovery_us3day produce --out out/produce
+python3 -m recovery_us3day produce --project config/representative.s04.json --out test-output/s04-native
 ```
 
 `out/smoke/reference_extract_t15_NOT_A_RENDER.jpg` 是参考片抽帧，旁边的 json 写明它不是渲染结果。

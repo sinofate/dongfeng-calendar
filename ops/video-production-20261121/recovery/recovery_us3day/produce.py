@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
+from .assparse import format_ass_time
 from .components import resolve_component
 from .compose import build_smoke_ass
 from .fonts import resolve_noto
@@ -21,8 +23,27 @@ BURNED_PLATE_NAMES = {
 def _rows(value, key: str) -> list[dict]:
     if value in (None, "", "none"):
         return []
-    payload = json.loads(Path(value).read_text(encoding="utf-8"))
-    return payload.get(key) or []
+    path = _locate(value)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if key == "events" and not payload.get(key) and str(payload.get("reason") or "").startswith("none"):
+        return []
+    rows = []
+    for row in payload.get(key) or []:
+        item = dict(row)
+        if item.get("file"):
+            item["file"] = str(_locate(item["file"]))
+        rows.append(item)
+    return rows
+
+
+def _locate(value: str) -> Path:
+    path = Path(value)
+    if path.is_file():
+        return path
+    rooted = ROOT / value
+    if rooted.is_file():
+        return rooted
+    return path
 
 
 def _event_gaps(slot: str, value, key: str) -> list[dict]:
@@ -30,17 +51,20 @@ def _event_gaps(slot: str, value, key: str) -> list[dict]:
         return [{"slot": slot, "missing": "unfilled"}]
     if value == "none":
         return []
-    path = Path(value)
+    path = _locate(value)
     if not path.is_file():
         return [{"slot": slot, "missing": str(path)}]
     payload = json.loads(path.read_text(encoding="utf-8"))
     rows = payload.get(key) or []
+    reason = str(payload.get("reason") or "")
+    if not rows and reason.startswith("none"):
+        return []
     if not rows:
         return [{"slot": slot, "missing": "no events in file"}]
     gaps = []
     for index, row in enumerate(rows):
         media = row.get("file")
-        if not media or not Path(media).is_file():
+        if not media or not _locate(str(media)).is_file():
             gaps.append({"slot": f"{slot}[{index}].file", "missing": str(media)})
     return gaps
 
@@ -50,7 +74,7 @@ def _file_gap(slot: str, value) -> dict | None:
         return {"slot": slot, "missing": "unfilled"}
     if value == "none":
         return None
-    path = Path(value)
+    path = _locate(value)
     if path.name in BURNED_PLATE_NAMES or "REFERENCE_NOT_RERENDER" in path.name:
         return {"slot": slot, "missing": f"{path} is a burned plate, not a clean shot"}
     if not path.is_file():
@@ -115,10 +139,67 @@ def produce(project: dict, catalog: dict, out_dir: Path) -> dict:
             encoding="utf-8",
         )
         return report
-    return _render_filled(project, out_dir, report)
+    return _render_filled(project, catalog, out_dir, report)
 
 
-def _render_filled(project: dict, out_dir: Path, report: dict) -> dict:
+def _accent_map(html: str) -> dict[str, str]:
+    return {
+        name: color
+        for name, color in re.findall(
+            r"(\w+):\s*\"var\([^,]+,\s*(#[0-9A-Fa-f]{6})\)\"",
+            html,
+        )
+    }
+
+
+def _hex_to_ass(color: str) -> str:
+    red, green, blue = color[1:3], color[3:5], color[5:7]
+    return f"00{blue}{green}{red}".upper()
+
+
+def _component_call(project: dict, catalog: dict, shot: dict, total: float) -> dict | None:
+    resolved = resolve_component(catalog, shot, project.get("library_roots") or {})
+    if not resolved["ok"]:
+        return None
+    variables = shot["component"].get("variables") or {}
+    folder = Path(resolved["folder"])
+    registry = json.loads((folder / "registry-item.json").read_text(encoding="utf-8"))
+    snippet_name = ((registry.get("files") or [{}])[0]).get("path")
+    html_path = folder / snippet_name if snippet_name else None
+    html = html_path.read_text(encoding="utf-8") if html_path and html_path.is_file() else ""
+    accent = str(variables.get("accent") or "green")
+    hex_color = _accent_map(html).get(accent)
+    if not hex_color:
+        return None
+    sync = resolved["sync"][:1]
+    start = float(sync[0]["offset_in_shot"]) if sync else float(variables.get("draw_at") or 0)
+    stage = RECONSTRUCTION["main_rect"]
+    size = int(round(min(0.08 * stage["w"], 0.15 * stage["h"])))
+    text = str(variables.get("emphasis_word") or variables.get("text") or "")
+    margin_v = 1920 - (stage["y"] + stage["h"] - 16)
+    override = "{\\u1\\c&H" + _hex_to_ass(hex_color) + "&\\fs" + str(size) + "\\bord0\\shad0}"
+    return {
+        "id": shot["component"]["id"],
+        "binding_layer": shot["component"].get("binding_layer"),
+        "not_original_shot_source": bool(shot["component"].get("not_original_shot_source")),
+        "why": shot["component"].get("why"),
+        "variables": variables,
+        "sync": resolved["sync"],
+        "drawn_text": text,
+        "drawn_text_is": "registry emphasis_word; the full registry text stays in the subtitle line",
+        "accent_hex": hex_color,
+        "accent_source": str(html_path) if html_path else "",
+        "font_size_px": size,
+        "font_size_rule": "min(8cqw, 15cqh) of the 1080×1128 stage, from the component stylesheet",
+        "registry": str(folder / "registry-item.json"),
+        "snippet": str(html_path) if html_path else "",
+        "ass_line": (
+            f"Dialogue: 1,{format_ass_time(start)},{format_ass_time(total)},D,,0,0,{margin_v},,{override}{text}"
+        ),
+    }
+
+
+def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) -> dict:
     fonts = resolve_noto((project.get("fonts") or {}).get("regular"), (project.get("fonts") or {}).get("bold"))
     shots = project["shots"]
     stage = RECONSTRUCTION["main_rect"]
@@ -131,11 +212,24 @@ def _render_filled(project: dict, out_dir: Path, report: dict) -> dict:
         build_smoke_ass(ass_path, 0, float(project["timeline"]["total"]), 0, cover_until),
         encoding="utf-8",
     )
+    component_calls = []
+    for shot in shots:
+        if not (shot.get("component") or {}).get("id"):
+            continue
+        call = _component_call(project, catalog, shot, float(project["timeline"]["total"]))
+        if call:
+            component_calls.append(call)
+    if component_calls:
+        ass_file.write_text(ass_file.read_text(encoding="utf-8") + "\n".join(call["ass_line"] for call in component_calls) + "\n", encoding="utf-8")
     filters = []
-    cmd = ["ffmpeg", "-y", "-v", "error"]
+    cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "verbose"]
     for index, shot in enumerate(shots):
-        cmd.extend(["-i", shot["media"]])
+        media = _locate(shot["media"])
         duration = float(shot["t1"]) - float(shot["t0"])
+        if media.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+            cmd.extend(["-loop", "1", "-framerate", "30", "-t", f"{duration:.6f}", "-i", str(media)])
+        else:
+            cmd.extend(["-i", str(media)])
         filters.append(
             f"[{index}:v]trim=start=0:end={duration:.6f},setpts=PTS-STARTPTS,"
             f"scale={stage['w']}:{stage['h']}:force_original_aspect_ratio=increase,"
@@ -144,11 +238,13 @@ def _render_filled(project: dict, out_dir: Path, report: dict) -> dict:
         )
     filters.append("".join(f"[v{index}]" for index in range(len(shots))) + f"concat=n={len(shots)}:v=1:a=0[cat]")
     filters.append(f"[cat]subtitles=filename='{ass_file}':fontsdir='{fonts['fontsdir']}'[vout]")
-    vo = project["audio"]["vo"]
+    vo = str(_locate(project["audio"]["vo"]))
     cmd.extend(["-i", vo])
     vo_index = len(shots)
     duration = float(project["timeline"]["total"])
-    filters.append(f"[{vo_index}:a]atrim=0:{duration:.6f},asetpts=PTS-STARTPTS[vo]")
+    filters.append(
+        f"[{vo_index}:a]aresample=48000,apad=whole_dur={duration:.6f},atrim=0:{duration:.6f},asetpts=PTS-STARTPTS[vo]"
+    )
     labels = ["[vo]"]
     next_input = vo_index + 1
     for row in _rows(project["audio"].get("bgm_plan"), "segments"):
@@ -157,9 +253,15 @@ def _render_filled(project: dict, out_dir: Path, report: dict) -> dict:
         offset = float(row.get("offset") or 0)
         delay = int(round(float(row["start"]) * 1000))
         gain = float(row.get("gain_db") or 0)
+        fades = ""
+        if row.get("fade_in"):
+            fades += f",afade=t=in:st=0:d={float(row['fade_in'])}"
+        if row.get("fade_out"):
+            start = float(row.get("fade_out_start", float(row["end"]) - float(row["fade_out"])))
+            fades += f",afade=t=out:st={start}:d={float(row['fade_out'])}"
         filters.append(
             f"[{next_input}:a]atrim=start={offset}:end={offset + length},asetpts=PTS-STARTPTS,"
-            f"volume={gain}dB,adelay={delay}|{delay}[m{next_input}]"
+            f"volume={gain}dB{fades},adelay={delay}|{delay}[m{next_input}]"
         )
         labels.append(f"[m{next_input}]")
         next_input += 1
@@ -206,8 +308,23 @@ def _render_filled(project: dict, out_dir: Path, report: dict) -> dict:
         report["status"] = "production_encode_failed"
         report["qualified"] = False
         return report
-    report["status"] = "production_composite"
+    log_text = (out_dir / "production.ffmpeg.log").read_text(encoding="utf-8", errors="replace")
+    fontselect = [line.strip() for line in log_text.splitlines() if "fontselect:" in line]
+    report["status"] = "representative_native_produce" if project.get("span") == "representative" else "production_composite"
     report["output"] = str(output)
     report["qualified"] = False
-    report["note"] = "Picture uses the supplied shot media and Noto. Component snippets are checked on disk but are not executed as HyperFrames."
+    report["recovered_master"] = False
+    report["independent_ffmpeg_probe"] = False
+    report["component_calls"] = [
+        {key: value for key, value in call.items() if key != "ass_line"} for call in component_calls
+    ]
+    report["fontselect"] = fontselect
+    report["note"] = (
+        "Encoded by recovery_us3day produce. Not the separate local ffmpeg probe. "
+        "Not a restored 22-shot film. The burned master was not used as the picture."
+    )
+    (out_dir / "production_report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     return report

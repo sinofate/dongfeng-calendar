@@ -236,12 +236,15 @@ class LayoutTests(unittest.TestCase):
 
 class SmokeTests(unittest.TestCase):
     def test_smoke_does_not_pass_without_noto(self):
-        fonts = resolve_noto()
         with tempfile.TemporaryDirectory(prefix="us3day-smoke-") as tmp:
             code = main(
                 [
                     "smoke",
                     "--allow-reference-plate",
+                    "--font-regular",
+                    "inputs/fonts/missing-regular.ttc",
+                    "--font-bold",
+                    "inputs/fonts/missing-bold.ttc",
                     "--reference",
                     str(REFERENCE),
                     "--ass",
@@ -252,25 +255,23 @@ class SmokeTests(unittest.TestCase):
                     tmp,
                 ]
             )
-            if fonts["ok"]:
-                self.assertEqual(code, 2)
-                report = json.loads((Path(tmp) / "smoke_report.json").read_text(encoding="utf-8"))
-                self.assertFalse(report["qualified"])
-                self.assertFalse(report["clearance_verified"])
-                ass_text = (Path(tmp) / "smoke_opening_not_recovered_master.ass").read_text(encoding="utf-8")
-                self.assertIn("Noto Sans CJK SC", ass_text)
-                self.assertNotIn("WenQuanYi", ass_text)
-            else:
-                self.assertEqual(code, 3)
-                report = json.loads((Path(tmp) / "smoke_report.json").read_text(encoding="utf-8"))
-                self.assertEqual(report["status"], "font_missing_not_accepted")
-                self.assertFalse(report["qualified"])
-                self.assertEqual(list(Path(tmp).glob("*.mp4")), [])
+            self.assertEqual(code, 3)
+            report = json.loads((Path(tmp) / "smoke_report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "font_missing_not_accepted")
+            self.assertFalse(report["qualified"])
+            self.assertEqual(list(Path(tmp).glob("*.mp4")), [])
+            present = resolve_noto(
+                "inputs/fonts/NotoSansCJK-Regular.ttc",
+                "inputs/fonts/NotoSansCJK-Bold.ttc",
+            )
+            self.assertTrue(present["ok"], present)
 
 
 class ProductionTests(unittest.TestCase):
     def test_unfilled_slots_write_no_film(self):
         project = build_project()
+        project["fonts"]["regular"] = "inputs/fonts/missing-regular.ttc"
+        project["fonts"]["bold"] = "inputs/fonts/missing-bold.ttc"
         catalog = load_catalog(CATALOG)
         with tempfile.TemporaryDirectory(prefix="us3day-produce-") as tmp:
             report = produce(project, catalog, Path(tmp))

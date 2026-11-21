@@ -1,0 +1,53 @@
+{
+  "status": "representative_existing_clean_asset_input_not_full_film",
+  "case": "2026-11-07-us-3day-market-correct",
+  "representative_shot": "s04",
+  "original_t0": 13.536,
+  "original_t1": 20.698,
+  "render_duration_seconds": 7.3,
+  "vo_duration_seconds": 7.272,
+  "tail_policy": "full existing p03 preserved, output extends to 7.3 seconds rather than cutting to historical 7.162",
+  "primary_visual": "phone_portfolio_mono.jpg",
+  "alternate_visual": "chip_wafer.jpg",
+  "visual_origin": "existing case backgrounds; materials.md:39–48 says reused Image2.5 no-text atmosphere from #0, not documentary footage, not newly generated",
+  "no_burned_title_or_subtitle": "visually checked both original JPGs; no removal/inpainting from old master",
+  "subtitle": "real final_v1 ASS s04 Dialogue rebased; historical L/R30 copy plus later-adopted90 probe variant",
+  "bgm": {
+    "source_file": "/workspace/pub/video-clone/knowledge/bgm-library/tracks/tech_drive/pb622408.mp3",
+    "source_url": "https://pixabay.com/music/corporate-news-music-622408/",
+    "license": "Pixabay Content License (catalog record)",
+    "input_start": 10.0,
+    "duration": 7.3,
+    "role": "quiet tech-drive bed, non-event probe not final mix",
+    "probe_gain_db": -30
+  },
+  "sfx": "none; no semantic event calls for impact/click in this paragraph",
+  "motion_components": "two requested native source dirs copied untouched for cloud; not locally executed or claimed bound",
+  "read_only_sources": [
+    {
+      "path": "/workspace/pub/video-clone/cases/2026-11-07-us-3day-market-correct/media/bgs/phone_portfolio_mono.jpg",
+      "bytes": 258767,
+      "sha256": "0979fbe193a7a93448fc1b0ae8e76ef169b3287aeae830991e48f01b2bd45d97"
+    },
+    {
+      "path": "/workspace/pub/video-clone/cases/2026-11-07-us-3day-market-correct/media/bgs/chip_wafer.jpg",
+      "bytes": 276610,
+      "sha256": "9894171ead10a856673471708f4bd3d663cc853fc1fa40bc4cf91f16494abbbb"
+    },
+    {
+      "path": "/workspace/pub/video-clone/cases/2026-11-07-us-3day-market-correct/audio/p03.mp3",
+      "bytes": 118068,
+      "sha256": "b86e153bb175da73b5ad0950733b2cdbfbed4bc493fb078da1b3cf204cd9f8bb"
+    },
+    {
+      "path": "/workspace/pub/video-clone/cases/2026-11-07-us-3day-market-correct/final/final_v1.ass",
+      "bytes": 6673,
+      "sha256": "7190c00ae61296952940535f566ec67d8211ee9bd4f0d8d9c65f3e3d570153fb"
+    },
+    {
+      "path": "/workspace/pub/video-clone/knowledge/bgm-library/tracks/tech_drive/pb622408.mp3",
+      "bytes": 5134848,
+      "sha256": "f742605b2ff92d3a4a1b6090e4bdad2322d0d1c1c15973b859cfc6c539001044"
+    }
+  ]
+}

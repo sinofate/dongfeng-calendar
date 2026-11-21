@@ -22,7 +22,17 @@ python3 -m unittest tests.test_recovery -v
 
 检查：540 坐标和 1080 坐标分开；1080 裁切是 y312/h1128，360 裁切才是 y104/h376；生成 ASS 使用 Noto Sans CJK SC 和 MarginL/R 90；没有 Noto 文件时 `smoke` 退出码 3 且不写 mp4；`produce` 在媒体、口播、BGM、音效、组件都未填时不写 mp4。历史边距 30 仍留在母本样式里。
 
-本机有 Noto 时，`smoke` 可以写出诊断片，但退出码是 2。烧字母带不能证明干净切片的观感，退出码不是验收通过。
+缺字体测试改成显式传入不存在的字体路径，不再依赖系统里碰巧没有 Noto。附带的两份字体在时，`resolve_noto` 仍能找到它们。11 项测试通过。
+
+## 原生代表片段
+
+`python3 -m recovery_us3day produce --project config/representative.s04.json --out test-output/s04-native`
+
+exit 0。1080×1920、30fps、7.300 秒，音画都是 7.300 秒。画面是干净的 phone_portfolio_mono，不是母带。ASS 为 Noto Sans CJK SC、MarginL/R 90。libass 日志：`fontselect: (Noto Sans CJK SC, 700, 0) -> NotoSansCJKsc-Bold, 2`。
+
+组件调用写在 `production_report.json`：`hf_components:marker-highlight`，registry 的 `marker-draw` 在 0.9 秒，accent blue 从 snippet 读到 `#61a8ff`。这不是原镜 Kinetic 源码，绑定层写明了。SFX 是 none。BGM 是 pb622408 已有截段，-30 dB。
+
+这不是本机那条独立 ffmpeg probe，也不是 22 镜成片。默认 `produce` 仍因整片缺素材拒绝编码。参考 smoke 里的旧字幕和来源行仍然不能当无来源证明。
 
 ## 本机观看后的窗口修正
 

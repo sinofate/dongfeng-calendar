@@ -17,9 +17,24 @@ class FontMissing(RuntimeError):
         super().__init__("Noto Sans CJK SC is not available: " + ", ".join(missing))
 
 
+def _resolve_file(value: str | None, fallback: Path) -> Path:
+    if not value:
+        vendored = Path(__file__).resolve().parents[1] / "inputs" / "fonts" / fallback.name
+        if vendored.is_file():
+            return vendored
+        return fallback
+    path = Path(value)
+    if path.is_file():
+        return path
+    rooted = Path(__file__).resolve().parents[1] / value
+    if rooted.is_file():
+        return rooted
+    return path
+
+
 def resolve_noto(regular: str | None = None, bold: str | None = None) -> dict:
-    regular_path = Path(regular) if regular else KNOWN_REGULAR
-    bold_path = Path(bold) if bold else KNOWN_BOLD
+    regular_path = _resolve_file(regular, KNOWN_REGULAR)
+    bold_path = _resolve_file(bold, KNOWN_BOLD)
     missing = [str(path) for path in (regular_path, bold_path) if not path.is_file()]
     fontsdir = str(bold_path.parent) if not missing and regular_path.parent == bold_path.parent else None
     if not missing and fontsdir is None:

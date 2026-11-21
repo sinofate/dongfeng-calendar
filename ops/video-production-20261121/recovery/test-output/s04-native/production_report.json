@@ -1,0 +1,48 @@
+{
+  "mode": "production",
+  "qualified": false,
+  "recovered_master": false,
+  "reference_plate_used": false,
+  "gaps": [],
+  "status": "representative_native_produce",
+  "output": "test-output/s04-native/production_not_reference.mp4",
+  "independent_ffmpeg_probe": false,
+  "component_calls": [
+    {
+      "id": "hf_components:marker-highlight",
+      "binding_layer": "representative_library_call_not_original_shot_source",
+      "not_original_shot_source": true,
+      "why": "The supplied registry is marker-highlight. Its text is the existing s04 dialogue 电费够不够. Variables stay inside that registry. Storyboard motion for this shot was Kinetic and the original HTML is still missing, so this call is not a recovered s04 binding.",
+      "variables": {
+        "text": "电费够不够",
+        "emphasis_word": "电费",
+        "style": "underline",
+        "draw_at": 0.9,
+        "accent": "blue",
+        "exit": "none"
+      },
+      "sync": [
+        {
+          "id": "marker-draw",
+          "phase": "in",
+          "offset_in_shot": 0.9,
+          "t": 0.9,
+          "inside_shot": true,
+          "layer": "catalog_offset_plus_shot_t0"
+        }
+      ],
+      "drawn_text": "电费",
+      "drawn_text_is": "registry emphasis_word; the full registry text stays in the subtitle line",
+      "accent_hex": "#61a8ff",
+      "accent_source": "inputs/representative/components/marker-highlight/marker-highlight.html",
+      "font_size_px": 86,
+      "font_size_rule": "min(8cqw, 15cqh) of the 1080×1128 stage, from the component stylesheet",
+      "registry": "inputs/representative/components/marker-highlight/registry-item.json",
+      "snippet": "inputs/representative/components/marker-highlight/marker-highlight.html"
+    }
+  ],
+  "fontselect": [
+    "[Parsed_subtitles_8 @ 0x565291c7f140] fontselect: (Noto Sans CJK SC, 700, 0) -> NotoSansCJKsc-Bold, 2, NotoSansCJKsc-Bold"
+  ],
+  "note": "Encoded by recovery_us3day produce. Not the separate local ffmpeg probe. Not a restored 22-shot film. The burned master was not used as the picture."
+}

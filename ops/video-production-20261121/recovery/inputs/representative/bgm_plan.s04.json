@@ -1,0 +1,20 @@
+{
+  "layer": "documented_library_excerpt",
+  "track_id": "pb622408",
+  "source_url": "https://pixabay.com/music/corporate-news-music-622408/",
+  "license": "Pixabay Content License (catalog record)",
+  "note": "Excerpt of the existing body track, 10.0–17.3s. Not a new composition.",
+  "segments": [
+    {
+      "start": 0,
+      "end": 7.3,
+      "offset": 0,
+      "file": "inputs/representative/bgm_pb622408_excerpt_10s_17p3s.wav",
+      "gain_db": -30,
+      "fade_in": 0.3,
+      "fade_out": 0.5,
+      "fade_out_start": 6.8,
+      "role": "body"
+    }
+  ]
+}
