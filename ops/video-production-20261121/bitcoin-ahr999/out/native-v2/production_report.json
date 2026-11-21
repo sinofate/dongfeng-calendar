@@ -1,0 +1,345 @@
+{
+  "mode": "production",
+  "qualified": false,
+  "recovered_master": false,
+  "reference_plate_used": false,
+  "gaps": [],
+  "status": "production_composite",
+  "output": "out/native-v2/production_not_reference.mp4",
+  "independent_ffmpeg_probe": false,
+  "component_calls": [
+    {
+      "id": "hf_components:cover-push-3",
+      "status": "zoompan_of_cover_file",
+      "rendered_as": "zoompan 1.00 to 1.03 over the cover, one input frame, full frame, then hard cut",
+      "ass_lines": [],
+      "not_ass_redraw": true,
+      "shot_id": "s01-cover"
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/number-pop-in/number-pop-in.html",
+      "source_sha256": "25bb2a0a3e2dc9a067cfb016d7d8a971b70774652a0a4dca200c9173a1fc4e48",
+      "variables": {
+        "value": "55,298",
+        "unit": "2026-11-21 当日低点",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 14.018,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s01_number-pop-in.landed.png",
+      "landed_sha256": "899c2c45a2f10dd2564252bf2e302befba003725286a0b5edb2401b1979def9d",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside number-pop-in.html, run with gsap 3.14.2"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s01"
+    },
+    {
+      "id": "hf_components:kinetic-center-build",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/kinetic-center-build/kinetic-center-build.html",
+      "source_sha256": "774f75b80d82fbc0c6226b85743804fb7a2229fb038eb0d38fa2e9503072c2e0",
+      "variables": {
+        "text": "值得关注 ≠ 已经见底",
+        "font_size": 72,
+        "entry_offset": 48,
+        "color": "#FFFFFF",
+        "font_weight": "700"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 60,
+      "capture_seconds": 2.0,
+      "hold_seconds": 8.742,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s02_kinetic-center-build.landed.png",
+      "landed_sha256": "11afa1406de923ee886d55744241094da934bff21444d46847bf9daf96baf94b",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "original kinetic-center-build.html bytes are unchanged",
+        "host drops the Google Fonts stylesheet link and points the two script src values at local GSAP 3.14.2 and the fetched CustomEase 3.14.2",
+        "host sets #root --color from the declared color variable; the snippet CSS already reads var(--color) and the inline script does not assign it",
+        "host measureFont adds Noto Sans CJK SC because the snippet measures with a latin stack and the supplied Geist/Inter files have no CJK"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "2dae8ef6daba66ce7b527b1f46a5695ba325b21ad5b4d73e4a843753c65415f6",
+      "customease_note": "fetched from https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/CustomEase.min.js; not in the asset library; not handwritten",
+      "ass_lines": [],
+      "shot_id": "s02"
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/number-pop-in/number-pop-in.html",
+      "source_sha256": "25bb2a0a3e2dc9a067cfb016d7d8a971b70774652a0a4dca200c9173a1fc4e48",
+      "variables": {
+        "value": "0.228",
+        "unit": "2020-03-12 历史回算；当前逼近 0.23",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 11.737,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s03_number-pop-in.landed.png",
+      "landed_sha256": "edeff18156d965b1395b591567ae3eba75dd518907ae989fb05e219eed7f108c",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside number-pop-in.html, run with gsap 3.14.2"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s03"
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/panel-reveal/panel-reveal.html",
+      "source_sha256": "0fbb1c9685a80e10e577d405544bf8db35ec1a27cb0c8bed55a4a1f5fd88d376",
+      "variables": {
+        "title": "2011 年早期市场：约 0.15",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 6.073,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s04_panel-reveal.landed.png",
+      "landed_sha256": "cce5e4e6e3f032667a4153cdea96c2a3546e32fbc836e82800eb70d83efd7eec",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside panel-reveal.html, run with gsap 3.14.2",
+        "host removes the snippet's default body lines Duration 420ms and Easing power3.out after the real script sets the title"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s04"
+    },
+    {
+      "id": "hf_components:price-decline-56000-44800",
+      "status": "svg_raster_of_attached_component",
+      "not_ass_redraw": true,
+      "rendered_as": "librsvg of M165 280 C320 315 375 385 505 435 S685 625 875 780, 2160px then lanczos to the stage. Illustrative pressure path, not a market series.",
+      "source_html": "inputs/components/price-decline-56000-44800/price-decline-56000-44800.html",
+      "ass_lines": [],
+      "shot_id": "s05"
+    },
+    {
+      "shot_id": "s06-spec",
+      "status": "plate_only",
+      "ass_lines": []
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/panel-reveal/panel-reveal.html",
+      "source_sha256": "0fbb1c9685a80e10e577d405544bf8db35ec1a27cb0c8bed55a4a1f5fd88d376",
+      "variables": {
+        "title": "六美分／度电 · 约五万四美元／枚（仅电费估算）",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 6.267,
+      "anchor": "center",
+      "landed_png": "out/native-v2/s06-cost_panel-reveal.landed.png",
+      "landed_sha256": "97de0de65adca120c2593fbda2dd3dd672c473d102a2fe64d201f64038c4101d",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside panel-reveal.html, run with gsap 3.14.2",
+        "host removes the snippet's default body lines Duration 420ms and Easing power3.out after the real script sets the title"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s06-cost"
+    },
+    {
+      "id": "hf_components:number-pop-in",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/number-pop-in/number-pop-in.html",
+      "source_sha256": "25bb2a0a3e2dc9a067cfb016d7d8a971b70774652a0a4dca200c9173a1fc4e48",
+      "variables": {
+        "value": "约 5.8 亿",
+        "unit": "美元净流出 · 2026-11-19；比较的是金额",
+        "lift": "standard",
+        "tone": "paper"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 16.142,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s07_number-pop-in.landed.png",
+      "landed_sha256": "96918abae8ffabea03cca64f18db984edfa0c24acadfdb7fcbfbd917d94c1bb2",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside number-pop-in.html, run with gsap 3.14.2"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s07"
+    },
+    {
+      "id": "hf_components:kinetic-center-build",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/kinetic-center-build/kinetic-center-build.html",
+      "source_sha256": "774f75b80d82fbc0c6226b85743804fb7a2229fb038eb0d38fa2e9503072c2e0",
+      "variables": {
+        "text": "观察：五日资金净流向／回踩低点能否守住",
+        "font_size": 72,
+        "entry_offset": 40,
+        "color": "#FFFFFF",
+        "font_weight": "700"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 60,
+      "capture_seconds": 2.0,
+      "hold_seconds": 8.073,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s08_kinetic-center-build.landed.png",
+      "landed_sha256": "3768702226d6bda598df9db957f69d0fe65f79b5d954bfaf9921aef53f6fdc14",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "original kinetic-center-build.html bytes are unchanged",
+        "host drops the Google Fonts stylesheet link and points the two script src values at local GSAP 3.14.2 and the fetched CustomEase 3.14.2",
+        "host sets #root --color from the declared color variable; the snippet CSS already reads var(--color) and the inline script does not assign it",
+        "host measureFont adds Noto Sans CJK SC because the snippet measures with a latin stack and the supplied Geist/Inter files have no CJK"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "2dae8ef6daba66ce7b527b1f46a5695ba325b21ad5b4d73e4a843753c65415f6",
+      "customease_note": "fetched from https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/CustomEase.min.js; not in the asset library; not handwritten",
+      "ass_lines": [],
+      "shot_id": "s08"
+    },
+    {
+      "id": "hf_components:panel-reveal",
+      "status": "html_snippet_rendered",
+      "not_ass_redraw": true,
+      "source_html": "/workspace/ops/video-production-20261121/bitcoin-ahr999/inputs/components/hf_components/panel-reveal/panel-reveal.html",
+      "source_sha256": "0fbb1c9685a80e10e577d405544bf8db35ec1a27cb0c8bed55a4a1f5fd88d376",
+      "variables": {
+        "title": "估值值得看；有人接，买点才更有说服力",
+        "width": "wide",
+        "tone": "ink",
+        "reveal": "fade"
+      },
+      "renderer": "google-chrome headless CDP screenshot",
+      "browser": "Chrome/157.0.8103.50",
+      "capture_frames": 30,
+      "capture_seconds": 1.0,
+      "hold_seconds": 8.969,
+      "anchor": "well",
+      "landed_png": "out/native-v2/s09_panel-reveal.landed.png",
+      "landed_sha256": "a8c7f02ffa2de4994261905ae05204fa1c3330bd91c9f9ebaeada3f5c160031c",
+      "host_adaptations": [
+        "transparent host, placed inside the 1080x1128 stage, not in the title or subtitle bands",
+        "Noto Sans CJK SC is only the CJK fallback after Inter/Geist; film titles and subtitles stay on the ASS Noto styles",
+        "demo.html was not opened and its default copy is not the shot text",
+        "timeline is the fromTo comment inside panel-reveal.html, run with gsap 3.14.2",
+        "host removes the snippet's default body lines Duration 420ms and Easing power3.out after the real script sets the title"
+      ],
+      "gsap_sha256": "7b2c91e3bff9022bef50054413b365a945c93f87285dcf8bdfb92076c4c56304",
+      "customease_sha256": "",
+      "customease_note": "",
+      "ass_lines": [],
+      "shot_id": "s09"
+    }
+  ],
+  "fontselect": [
+    "[Parsed_subtitles_76 @ 0x55a81f939440] fontselect: (Noto Sans CJK SC, 700, 0) -> NotoSansCJKsc-Bold, 2, NotoSansCJKsc-Bold"
+  ],
+  "loudness": {
+    "ok": true,
+    "method": "linear_gain_on_finished_mix",
+    "ratio_preserved": true,
+    "tail_trimmed": false,
+    "spec": {
+      "target_i_lufs": -16.0,
+      "true_peak_ceiling_dbtp": -1.5,
+      "layer": "reconstructed_technical_target",
+      "not_original_master_parameter": true,
+      "master_file_remeasured": false,
+      "documented_master_not_applied": {
+        "i_lufs": -14.0,
+        "true_peak_dbtp": -2.4,
+        "source": "SUBMIT_final_v1.md",
+        "note": "Document value only. final_v1.mp4 is not in this environment, so it was not measured again and is not this mix target."
+      }
+    },
+    "before": {
+      "ok": true,
+      "i_lufs": -16.23,
+      "true_peak_dbtp": -2.91,
+      "lra": 2.4,
+      "threshold_lufs": -26.55,
+      "duration_seconds": 109.901
+    },
+    "applied_gain_db": 0.23,
+    "peak_limited": false,
+    "after": {
+      "ok": true,
+      "i_lufs": -16.02,
+      "true_peak_dbtp": -2.69,
+      "lra": 2.4,
+      "threshold_lufs": -26.33,
+      "duration_seconds": 109.901
+    },
+    "true_peak_within_ceiling": true
+  },
+  "video_stream_sha256": "76eccecb0853aa37a4e1dd45c93d01836399a474eeb7549de63c1dd32251a548",
+  "video_unchanged_from_pre_loudness_encode": true,
+  "note": "Encoded by recovery_us3day produce. Not the separate local ffmpeg probe. Not a restored 22-shot film. The burned master was not used as the picture."
+}

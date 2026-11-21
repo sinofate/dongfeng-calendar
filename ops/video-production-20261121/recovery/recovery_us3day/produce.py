@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -11,6 +12,7 @@ from .assparse import format_ass_time
 from .components import resolve_component
 from .compose import build_smoke_ass
 from .fonts import resolve_noto
+from .html_components import render_html_component
 from .layout import RECONSTRUCTION
 from .project import ROOT
 
@@ -99,6 +101,8 @@ def production_gaps(project: dict, catalog: dict | None = None) -> list[dict]:
         gap = _file_gap(f"{shot['id']}.media", shot.get("media"))
         if gap:
             gaps.append(gap)
+        if shot.get("component_required") is False:
+            continue
         if catalog is None:
             gaps.append({"slot": f"{shot['id']}.component", "missing": "catalog not loaded"})
             continue
@@ -284,48 +288,100 @@ def _bezier(p0, p1, p2, p3, count: int) -> list[tuple[float, float]]:
     return points
 
 
-def _render_price_decline(output: Path, duration: float, variables: dict) -> None:
-    """Draw the attached component's own cubic, not a new market curve.
+def _css_ease_out(amount: float) -> float:
+    """CSS ease-out is cubic-bezier(0, 0, 0.58, 1)."""
 
-    Path, guides, and stroke width come from price-decline-56000-44800.html:
-    M165 280 C320 315 375 385 505 435 S685 625 875 780, stroke 11, gold.
-    The draw runs from 10% to 75% of the shot, matching the component keyframes.
-    """
-    first = _bezier((165, 280), (320, 315), (375, 385), (505, 435), 90)
-    second = _bezier((505, 435), (635, 485), (685, 625), (875, 780), 90)
-    points = first[:-1] + second
-    boxes = []
-    for y in (260, 790):
-        x = 110
-        while x < 970:
-            boxes.append(f"drawbox=x={x}:y={y}:w=10:h=2:color=0x43536b@1:t=fill")
-            x += 22
-    for index, (x, y) in enumerate(points):
-        appear = duration * (0.10 + 0.65 * index / max(1, len(points) - 1))
-        left = int(round(x - 5))
-        top = int(round(y - 5))
-        boxes.append(
-            f"drawbox=x={left}:y={top}:w=11:h=11:color=0xFFD700@1:t=fill:enable='gte(t,{appear:.3f})'"
+    def axis(t: float, c1: float, c2: float) -> float:
+        return 3 * (1 - t) ** 2 * t * c1 + 3 * (1 - t) * t ** 2 * c2 + t ** 3
+
+    low, high = 0.0, 1.0
+    for _ in range(24):
+        mid = (low + high) / 2
+        if axis(mid, 0.0, 0.58) < amount:
+            low = mid
+        else:
+            high = mid
+    return axis((low + high) / 2, 0.0, 1.0)
+
+
+def _price_dash_offset(progress: float, length: float) -> tuple[float, float]:
+    """Match the component keyframes: draw 10%→75%, end mark lands 72%→76%."""
+    if progress <= 0.10:
+        offset = length
+    elif progress >= 0.75:
+        offset = 0.0
+    else:
+        offset = length * (1 - _css_ease_out((progress - 0.10) / 0.65))
+    if progress <= 0.72:
+        end_opacity = 0.0
+    elif progress >= 0.76:
+        end_opacity = 1.0
+    else:
+        end_opacity = (progress - 0.72) / 0.04
+    return offset, end_opacity
+
+
+def _render_price_decline(output: Path, duration: float, variables: dict) -> None:
+    """Rasterize the attached SVG cubic with librsvg. Not a drawbox stair and not a market series."""
+    samples = _bezier((165, 280), (320, 315), (375, 385), (505, 435), 80)
+    samples += _bezier((505, 435), (635, 485), (685, 625), (875, 780), 80)[1:]
+    length = 0.0
+    for (x0, y0), (x1, y1) in zip(samples, samples[1:]):
+        length += ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+    label = str(variables.get("scenario_label") or "").replace("&", "&amp;").replace("<", "&lt;")
+    start_price = variables.get("start_price")
+    end_price = variables.get("end_price")
+    frames = max(2, int(round(duration * 30)))
+    work = output.parent / f"{output.stem}_svg"
+    if work.exists():
+        subprocess.run(["rm", "-rf", str(work)], check=True)
+    work.mkdir()
+    for index in range(frames):
+        progress = (index / 30) / duration if duration else 1
+        offset, end_opacity = _price_dash_offset(min(1.0, progress), length)
+        svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1128" viewBox="0 0 1080 1128">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#131e32"/><stop offset="1" stop-color="#080d17"/>
+  </linearGradient></defs>
+  <rect width="1080" height="1128" fill="url(#g)"/>
+  <rect x="76" y="24" width="928" height="72" rx="12" fill="#27354a"/>
+  <text x="540" y="70" text-anchor="middle" fill="#ffffff" font-family="Noto Sans CJK SC" font-size="42" font-weight="700">{label}</text>
+  <path d="M110 260 H970 M110 790 H970" stroke="#43536b" stroke-width="2" stroke-dasharray="10 12"/>
+  <path d="M165 280 C320 315 375 385 505 435 S685 625 875 780" fill="none" stroke="#ffd700" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="{length:.2f}" stroke-dashoffset="{offset:.2f}"/>
+  <circle cx="165" cy="280" r="13" fill="#ffd700"/>
+  <circle cx="875" cy="780" r="16" fill="#ffd700" opacity="{end_opacity:.3f}"/>
+  <text x="165" y="225" fill="#ffffff" font-family="Noto Sans CJK SC" font-size="60" font-weight="700">约 {start_price}</text>
+  <text x="610" y="895" fill="#ffd700" font-family="Noto Sans CJK SC" font-size="68" font-weight="700" opacity="{end_opacity:.3f}">约 {end_price}</text>
+  <text x="165" y="995" fill="#cbd5e1" font-family="Noto Sans CJK SC" font-size="36">参考条件不变 · 压力测试</text>
+</svg>"""
+        svg_path = work / f"f{index:04d}.svg"
+        png_path = work / f"f{index:04d}.png"
+        svg_path.write_text(svg, encoding="utf-8")
+        proc = subprocess.run(
+            ["rsvg-convert", "-w", "2160", "-h", "2256", str(svg_path), "-o", str(png_path)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
         )
-    boxes.append("drawbox=x=152:y=267:w=26:h=26:color=0xFFD700@1:t=fill")
-    land = duration * 0.72
-    boxes.append(f"drawbox=x=859:y=764:w=32:h=32:color=0xFFD700@1:t=fill:enable='gte(t,{land:.3f})'")
-    filt = "scale=1080:1128,setsar=1," + ",".join(boxes)
+        if proc.returncode != 0:
+            raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-400:])
+        svg_path.unlink()
     proc = subprocess.run(
         [
             "ffmpeg", "-y", "-v", "error",
-            "-f", "lavfi", "-i", f"color=c=0x080d17:s=1080x1128:r=30:d={duration:.3f}",
-            "-vf", filt,
-            "-frames:v", str(max(2, int(round(duration * 30)))),
-            "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+            "-framerate", "30", "-i", str(work / "f%04d.png"),
+            "-vf", "scale=1080:1128:flags=lanczos,format=yuv420p",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+            "-t", f"{duration:.3f}",
             str(output),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
     )
+    subprocess.run(["rm", "-rf", str(work)], check=False)
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-500:])
+        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-400:])
 
 
 def _ass_time_pair(start: float, end: float) -> tuple[str, str]:
@@ -415,6 +471,191 @@ def _motion_overlay(project: dict, catalog: dict, shot: dict, total: float) -> d
     return call
 
 
+def _fit_plate_filter(crop: list | None, fit: str) -> str:
+    steps = []
+    if crop:
+        x, y, w, h = crop
+        steps.append(f"crop={int(w)}:{int(h)}:{int(x)}:{int(y)}")
+    if fit == "full":
+        steps.append("scale=1080:1128:force_original_aspect_ratio=decrease")
+        steps.append("pad=1080:1128:(ow-iw)/2:(oh-ih)/2:color=0x071829")
+    else:
+        # Upper stage only. The bottom 280px stays matte for the component, inside the window.
+        steps.append("scale=1080:820:force_original_aspect_ratio=decrease")
+        steps.append("pad=1080:1128:(ow-iw)/2:28:color=0x071829")
+    steps.append("setsar=1,fps=30,format=yuv420p")
+    return ",".join(steps)
+
+
+def _render_still_plate(path: Path, duration: float, crop: list | None, fit: str, output: Path) -> None:
+    proc = subprocess.run(
+        [
+            "ffmpeg", "-y", "-v", "error",
+            "-loop", "1", "-framerate", "30", "-t", f"{duration:.3f}", "-i", str(path),
+            "-vf", _fit_plate_filter(crop, fit),
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-an",
+            str(output),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-400:])
+
+
+def _render_plate(shot: dict, duration: float, output: Path) -> None:
+    beats = list((shot.get("plate") or {}).get("beats") or [])
+    if not beats:
+        _render_still_plate(_locate(shot["media"]), duration, None, shot.get("plate_fit") or "upper", output)
+        return
+    parts = []
+    for index, beat in enumerate(beats):
+        start = float(beat.get("t0") or 0)
+        end = float(beat["t1"]) if beat.get("t1") is not None else duration
+        part = output.parent / f"{output.stem}_{index}.mp4"
+        _render_still_plate(_locate(beat["file"]), end - start, beat.get("crop"), beat.get("fit") or "upper", part)
+        parts.append(part)
+    if len(parts) == 1:
+        parts[0].replace(output)
+        return
+    listing = output.parent / f"{output.stem}.concat.txt"
+    listing.write_text("".join(f"file '{part.resolve()}'\n" for part in parts), encoding="utf-8")
+    proc = subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(output)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-400:])
+
+
+def _overlay_component(plate: Path, component: Path, output: Path) -> None:
+    proc = subprocess.run(
+        [
+            "ffmpeg", "-y", "-v", "error",
+            "-i", str(plate), "-i", str(component),
+            "-filter_complex", "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-an", "-r", "30",
+            str(output),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", "replace")[-400:])
+
+
+def _reuse_shot(out_dir: Path, shot_id: str) -> dict | None:
+    if os.environ.get("V2_REUSE_PLATES") != "1":
+        return None
+    path = out_dir / f"{shot_id}.call.json"
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    media = Path(str(payload.get("media") or ""))
+    if not media.is_file():
+        return None
+    return payload
+
+
+def _store_shot(out_dir: Path, shot_id: str, media: Path, call: dict) -> None:
+    payload = dict(call)
+    payload["media"] = str(media)
+    (out_dir / f"{shot_id}.call.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _prepare_v2_shots(project: dict, out_dir: Path) -> tuple[list[dict], list[dict]]:
+    html_names = {"number-pop-in", "kinetic-center-build", "panel-reveal"}
+    prepared = []
+    calls = []
+    for shot in project["shots"]:
+        shot = dict(shot)
+        name = str((shot.get("component") or {}).get("id") or "").split(":")[-1]
+        duration = float(shot["t1"]) - float(shot["t0"])
+        reused = _reuse_shot(out_dir, shot["id"])
+        if reused:
+            shot["media"] = reused["media"]
+            call = {key: value for key, value in reused.items() if key != "media"}
+            call["ass_lines"] = []
+            calls.append(call)
+            prepared.append(shot)
+            continue
+        if name == "cover-push-3":
+            calls.append({
+                "shot_id": shot["id"],
+                "id": shot["component"]["id"],
+                "status": "zoompan_of_cover_file",
+                "rendered_as": "zoompan 1.00 to 1.03 over the cover, one input frame, full frame, then hard cut",
+                "ass_lines": [],
+                "not_ass_redraw": True,
+            })
+            _store_shot(out_dir, shot["id"], _locate(shot["media"]), calls[-1])
+            prepared.append(shot)
+            continue
+        if name == "price-decline-56000-44800":
+            plate = out_dir / f"{shot['id']}_price_decline.mp4"
+            _render_price_decline(plate, duration, (shot.get("component") or {}).get("variables") or {})
+            shot["media"] = str(plate)
+            calls.append({
+                "shot_id": shot["id"],
+                "id": shot["component"]["id"],
+                "status": "svg_raster_of_attached_component",
+                "not_ass_redraw": True,
+                "rendered_as": "librsvg of M165 280 C320 315 375 385 505 435 S685 625 875 780, 2160px then lanczos to the stage. Illustrative pressure path, not a market series.",
+                "source_html": str(_locate("inputs/components/price-decline-56000-44800/price-decline-56000-44800.html")),
+                "ass_lines": [],
+            })
+            _store_shot(out_dir, shot["id"], plate, calls[-1])
+            prepared.append(shot)
+            continue
+        plate = out_dir / f"{shot['id']}_plate.mp4"
+        _render_plate(shot, duration, plate)
+        if name in html_names:
+            overlay = out_dir / f"{shot['id']}_{name}.mov"
+            evidence = render_html_component(project, shot, overlay, shot.get("component_anchor") or "well")
+            evidence["shot_id"] = shot["id"]
+            evidence["ass_lines"] = []
+            merged = out_dir / f"{shot['id']}_merged.mp4"
+            _overlay_component(plate, overlay, merged)
+            shot["media"] = str(merged)
+            calls.append(evidence)
+            _store_shot(out_dir, shot["id"], merged, evidence)
+        else:
+            shot["media"] = str(plate)
+            _store_shot(out_dir, shot["id"], plate, {"shot_id": shot["id"], "status": "plate_only", "ass_lines": []})
+        prepared.append(shot)
+    return prepared, calls
+
+
+def _hold_last_cue(ass_file: Path, hold_until: float) -> None:
+    lines = ass_file.read_text(encoding="utf-8").splitlines()
+    best_index = None
+    best_time = -1.0
+    best = None
+    for index, line in enumerate(lines):
+        match = re.match(r"(Dialogue: \d+,)([^,]+),([^,]+),(.*)", line)
+        if not match:
+            continue
+        clock = match.group(3).split(":")
+        if len(clock) != 3:
+            continue
+        style = match.group(4).split(",", 1)[0]
+        if style in {"TitleY", "TitleW"}:
+            continue
+        seconds = int(clock[0]) * 3600 + int(clock[1]) * 60 + float(clock[2])
+        if seconds > best_time:
+            best_time = seconds
+            best_index = index
+            best = match
+    if best_index is None or best is None or hold_until <= best_time + 0.05:
+        return
+    lines[best_index] = f"{best.group(1)}{best.group(2)},{format_ass_time(hold_until)},{best.group(4)}"
+    ass_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) -> dict:
     fonts = resolve_noto((project.get("fonts") or {}).get("regular"), (project.get("fonts") or {}).get("bold"))
     shots = project["shots"]
@@ -433,9 +674,16 @@ def _render_filled(project: dict, catalog: dict, out_dir: Path, report: dict) ->
         ),
         encoding="utf-8",
     )
+    if (project.get("picture") or {}).get("tail_hold_subtitles"):
+        _hold_last_cue(ass_file, float(project["timeline"]["total"]))
     component_calls = []
     prepared = []
-    for shot in shots:
+    if (project.get("picture") or {}).get("compose") == "v2":
+        prepared, component_calls = _prepare_v2_shots(project, out_dir)
+        shots = prepared
+    else:
+        shots = list(shots)
+    for shot in ([] if (project.get("picture") or {}).get("compose") == "v2" else shots):
         shot = dict(shot)
         component = shot.get("component") or {}
         if str(component.get("id") or "").endswith("price-decline-56000-44800"):
