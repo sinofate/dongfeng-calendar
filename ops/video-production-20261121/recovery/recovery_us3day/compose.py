@@ -13,11 +13,12 @@ import subprocess
 from pathlib import Path
 
 from .assparse import events_overlapping, format_ass_time, parse_ass
-from .layout import RECONSTRUCTION, TITLE_DRAW, reference_crop
+from .fonts import FAMILY, FontMissing, resolve_noto
+from .layout import RECONSTRUCTION, TITLE_DRAW, plate_crop
 from .pixels import count_mask, is_yellow, load_rgb
 
-FONT_NAME = TITLE_DRAW["font_fallback"]
-FONT_DIR = "/usr/share/fonts/truetype/wqy"
+LATER_MARGIN_L = 90
+LATER_MARGIN_R = 90
 MATTE = "0x071829"
 
 
@@ -69,6 +70,8 @@ def _style_line(name, font, size, primary, outline_color, outline, shadow, align
 def build_smoke_ass(ass_path: Path, start: float, end: float, shift: float, title_from: float) -> str:
     parsed = parse_ass(ass_path)
     style = parsed.style
+    if "WenQuanYi" in FAMILY or "Micro Hei" in FAMILY:
+        raise ValueError("substitute font is not allowed")
     if style.outline_color.upper() != "#000000":
         raise ValueError("refusing to burn a non-black extracted outline")
     lines = [
@@ -81,19 +84,19 @@ def build_smoke_ass(ass_path: Path, start: float, end: float, shift: float, titl
         "",
         "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        _style_line("TitleY", FONT_NAME, TITLE_DRAW["l1"]["size"], TITLE_DRAW["l1"]["fill"], "#000000", 0, 0, 8, style.margin_l, style.margin_r, TITLE_DRAW["l1"]["top"]),
-        _style_line("TitleW", FONT_NAME, TITLE_DRAW["l2"]["size"], TITLE_DRAW["l2"]["fill"], "#000000", 0, 0, 8, style.margin_l, style.margin_r, TITLE_DRAW["l2"]["top"]),
+        _style_line("TitleY", FAMILY, TITLE_DRAW["l1"]["size"], TITLE_DRAW["l1"]["fill"], "#000000", 0, 0, 8, LATER_MARGIN_L, LATER_MARGIN_R, TITLE_DRAW["l1"]["top"]),
+        _style_line("TitleW", FAMILY, TITLE_DRAW["l2"]["size"], TITLE_DRAW["l2"]["fill"], "#000000", 0, 0, 8, LATER_MARGIN_L, LATER_MARGIN_R, TITLE_DRAW["l2"]["top"]),
         _style_line(
             "D",
-            FONT_NAME,
+            FAMILY,
             style.fontsize,
             style.primary,
             style.outline_color,
             style.outline,
             style.shadow,
             style.alignment,
-            style.margin_l,
-            style.margin_r,
+            LATER_MARGIN_L,
+            LATER_MARGIN_R,
             style.margin_v,
         ),
         "",
@@ -135,16 +138,32 @@ CANVAS_W = 1080
 CANVAS_H = 1920
 
 
-def _filter_graph(ass_file: Path, start: float, end: float, cover_until: float | None) -> str:
-    crop = reference_crop()
+def window_video_chain() -> str:
+    """Normalize the whole frame to 1080×1920, then keep only the stage.
+
+    Cropping a 360p rectangle out of a 1080p master zooms the top of the picture,
+    clips the right side of the card, and pulls old title ink into the window.
+    Scaling the full frame first makes a 1080×1920 input a 1:1 window. The pad
+    is the only pixels in the title and subtitle bands.
+    """
+    from .layout import assert_type_outside_stage
+
+    assert_type_outside_stage()
     stage = RECONSTRUCTION["main_rect"]
-    crop_filter = f"crop={crop['w']}:{crop['h']}:{crop['x']}:{crop['y']},scale={stage['w']}:{stage['h']}:flags=neighbor"
-    pad = f"pad={CANVAS_W}:{CANVAS_H}:{stage['x']}:{stage['y']}:color={MATTE},setsar=1,format=yuv420p"
-    subtitles = f"subtitles=filename='{ass_file}':fontsdir='{FONT_DIR}'"
+    return (
+        f"setsar=1,scale={CANVAS_W}:{CANVAS_H}:flags=lanczos,"
+        f"crop={stage['w']}:{stage['h']}:{stage['x']}:{stage['y']},"
+        f"pad={CANVAS_W}:{CANVAS_H}:{stage['x']}:{stage['y']}:color={MATTE},setsar=1,format=yuv420p"
+    )
+
+
+def _filter_graph(ass_file: Path, start: float, end: float, cover_until: float | None, fontsdir: str) -> str:
+    window = window_video_chain()
+    subtitles = f"subtitles=filename='{ass_file}':fontsdir='{fontsdir}'"
     if cover_until is None:
         return ";".join(
             [
-                f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS,{crop_filter},{pad}[staged]",
+                f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS,{window}[staged]",
                 f"[staged]{subtitles}[vout]",
                 f"[0:a]atrim=start={start}:end={end},asetpts=PTS-STARTPTS[aout]",
             ]
@@ -158,7 +177,7 @@ def _filter_graph(ass_file: Path, start: float, end: float, cover_until: float |
                 f"zoompan=z='1+0.03*on/{frames - 1}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
                 f"d={frames}:s=1080x1920:fps=30,format=yuv420p,trim=end={cover_until},setpts=PTS-STARTPTS[cover]"
             ),
-            f"[1:v]trim=start={plate_start}:end={end},setpts=PTS-STARTPTS,{crop_filter},{pad}[staged]",
+            f"[1:v]trim=start={plate_start}:end={end},setpts=PTS-STARTPTS,{window}[staged]",
             "[cover][staged]concat=n=2:v=1:a=0[cat]",
             f"[cat]{subtitles}[vout]",
             f"[1:a]atrim=start={start}:end={end},asetpts=PTS-STARTPTS[aout]",
@@ -195,12 +214,20 @@ def render_window(
         protected.append(cover)
     protected.extend(protected_dirs or [])
     _assert_output_safe(output, protected)
+    fonts = resolve_noto()
+    if not fonts["ok"]:
+        raise FontMissing(fonts["missing"])
+    info = probe(reference)
+    video = next(stream for stream in info["streams"] if stream["codec_type"] == "video")
+    crop = plate_crop(int(video["width"]), int(video["height"]))
     shift = 0.0 if cover_until is not None else start
     title_from = cover_until if cover_until is not None else start
     ass_text = build_smoke_ass(ass_path, start, end, shift, title_from)
+    if "WenQuanYi" in ass_text or "Micro Hei" in ass_text:
+        raise ValueError("generated ASS names a substitute font")
     ass_file = output.with_suffix(".ass")
     ass_file.write_text(ass_text, encoding="utf-8")
-    graph = _filter_graph(ass_file, start, end, cover_until)
+    graph = _filter_graph(ass_file, start, end, cover_until, fonts["fontsdir"])
     if cover_until is None:
         cmd = [
             "ffmpeg",
@@ -292,7 +319,17 @@ def render_window(
         "video_duration": float(video["duration"]),
         "audio_duration": float(audio["duration"]),
         "recovered_master": False,
-        "plate": "cover_then_reference_crop" if cover_until is not None else "reference_crop_not_original_clip",
+        "qualified": False,
+        "acceptance": "not_qualified",
+        "clearance_verified": False,
+        "residual_burned_in_text_removed": False,
+        "input_width": crop["input_w"],
+        "input_height": crop["input_h"],
+        "plate_crop": {key: crop[key] for key in ("x", "y", "w", "h", "space")},
+        "font_family": FAMILY,
+        "margin_l": LATER_MARGIN_L,
+        "margin_r": LATER_MARGIN_R,
+        "plate": "reference_plate_diagnostic" if cover_until is None else "cover_then_reference_plate_diagnostic",
         "audio": "reference_mix_trim_not_a_new_mix",
         "encode": "smoke_ultrafast_crf18_not_master_recipe",
         "ffmpeg_log": str(log_path),

@@ -11,4 +11,4 @@ python3 -m recovery_us3day smoke \
   --cover inputs/reference/cover_1080x1920.jpg \
   --allow-reference-plate \
   --out out/smoke
-echo "smoke written under out/smoke; recovered_master is false"
+echo "smoke exit is not acceptance; 3 means Noto is missing, 2 means a reference diagnostic was written and is not qualified"

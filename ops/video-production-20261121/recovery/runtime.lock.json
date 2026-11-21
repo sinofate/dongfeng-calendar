@@ -4,7 +4,12 @@
   "ffprobe": "6.1.1-3ubuntu5",
   "pip_packages": [],
   "hyperframes": "0.8.181 documented only; not installed and not invoked",
-  "font_fallback": "WenQuanYi Micro Hei at /usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-  "font_requested": "Noto Sans CJK SC",
+  "font_required": "Noto Sans CJK SC",
+  "font_files_required": [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
+  ],
+  "font_present_on_this_vm": false,
+  "substitute_font_accepted": false,
   "checked_at": "2026-11-21"
 }

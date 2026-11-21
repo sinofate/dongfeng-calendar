@@ -9,6 +9,8 @@ from pathlib import Path
 
 from .catalog import counts, load_catalog
 from .compose import extract_frame, render_window, write_reference_extract, yellow_in_band
+from .fonts import FontMissing, resolve_noto
+from .produce import produce
 from .gaps import build_report, render_markdown
 from .layout import RECONSTRUCTION
 from .project import (
@@ -65,6 +67,22 @@ def _cmd_smoke(args: argparse.Namespace) -> int:
     ass_path = Path(args.ass)
     cover = Path(args.cover) if args.cover else None
     out_dir = Path(args.out)
+    fonts = resolve_noto()
+    if not fonts["ok"]:
+        report = {
+            "qualified": False,
+            "recovered_master": False,
+            "acceptance": "not_qualified",
+            "status": "font_missing_not_accepted",
+            "font_family": fonts["family"],
+            "missing": fonts["missing"],
+            "substitute_forbidden": True,
+            "mp4_written": False,
+        }
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "smoke_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 3
     if not reference.is_file() or not ass_path.is_file():
         report = {
             "recovered_master": False,
@@ -84,26 +102,36 @@ def _cmd_smoke(args: argparse.Namespace) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
     protected = [ROOT / "inputs"]
-    opening = render_window(
-        reference=reference,
-        ass_path=ass_path,
-        output=out_dir / "smoke_opening_not_recovered_master.mp4",
-        start=0.0,
-        end=4.0,
-        cover=cover,
-        cover_until=1.5 if cover else None,
-        protected_dirs=protected,
-    )
-    comment = render_window(
-        reference=reference,
-        ass_path=ass_path,
-        output=out_dir / "smoke_s12_comment_window_not_recovered_master.mp4",
-        start=65.9,
-        end=67.0,
-        cover=None,
-        cover_until=None,
-        protected_dirs=protected,
-    )
+    try:
+        opening = render_window(
+            reference=reference,
+            ass_path=ass_path,
+            output=out_dir / "smoke_opening_not_recovered_master.mp4",
+            start=0.0,
+            end=4.0,
+            cover=cover,
+            cover_until=1.5 if cover else None,
+            protected_dirs=protected,
+        )
+        comment = render_window(
+            reference=reference,
+            ass_path=ass_path,
+            output=out_dir / "smoke_s12_comment_window_not_recovered_master.mp4",
+            start=65.9,
+            end=67.0,
+            cover=None,
+            cover_until=None,
+            protected_dirs=protected,
+        )
+    except FontMissing as exc:
+        report = {
+            "qualified": False,
+            "status": "font_missing_not_accepted",
+            "missing": exc.missing,
+            "mp4_written": False,
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 3
     extract_frame(out_dir / "smoke_opening_not_recovered_master.mp4", 2.5, out_dir / "smoke_opening_t2.5.jpg")
     extract_frame(out_dir / "smoke_s12_comment_window_not_recovered_master.mp4", 0.5, out_dir / "smoke_s12_t66.4.jpg")
     write_reference_extract(reference, 15.0, out_dir / "reference_extract_t15_NOT_A_RENDER.jpg")
@@ -125,22 +153,29 @@ def _cmd_smoke(args: argparse.Namespace) -> int:
         ),
     }
     report = {
+        "qualified": False,
         "recovered_master": False,
-        "status": "smoke_composite_on_reference_plate",
-        "acceptance_recovered_film": False,
-        "reason": "Original clips and vo_raw are absent. The stage shows a crop of the low-bitrate reference. Source lines baked into that plate and into the cover JPEG are still in those pixels; this compositor does not draw them.",
+        "acceptance": "not_qualified",
+        "status": "reference_plate_diagnostic_not_a_pass",
+        "clearance_verified": False,
+        "residual_burned_in_text_removed": False,
+        "reason": (
+            f"Input probe is {opening['input_width']}x{opening['input_height']}. "
+            "The stage crop is mapped from that size. Burned-in picture text and source marks "
+            "are still on the plate; this run does not verify that they were removed. "
+            "Exit is not acceptance."
+        ),
         "opening": opening,
         "s12_comment_window": comment,
         "band_yellow_counts": measures,
         "layout_layer": "reconstructed",
-        "revised_lr_locked": False,
-        "historical_lr_used_for_smoke": 30,
+        "historical_lr": 30,
+        "later_revision_lr": 90,
+        "font_family": "Noto Sans CJK SC",
     }
     (out_dir / "smoke_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    title_ok = measures["opening_t2.5_title_yellow"] > 200 and measures["s12_t66.4_title_yellow"] > 200
-    subtitle_ok = measures["opening_t2.5_subtitle_yellow"] > 200 and measures["s12_t66.4_subtitle_yellow"] < 30
-    return 0 if title_ok and subtitle_ok else 1
+    return 2
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -163,6 +198,19 @@ def build_parser() -> argparse.ArgumentParser:
     smoke.add_argument("--out", type=Path, required=True)
     smoke.add_argument("--allow-reference-plate", action="store_true")
     smoke.set_defaults(func=_cmd_smoke)
+
+    def _cmd_produce(args: argparse.Namespace) -> int:
+        project = load_project(args.project)
+        catalog = load_catalog(args.catalog)
+        report = produce(project, catalog, Path(args.out))
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 2 if report.get("gaps") else 0
+
+    produce_cmd = sub.add_parser("produce")
+    produce_cmd.add_argument("--project", type=Path, default=DEFAULT_PROJECT)
+    produce_cmd.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
+    produce_cmd.add_argument("--out", type=Path, required=True)
+    produce_cmd.set_defaults(func=_cmd_produce)
     return parser
 
 

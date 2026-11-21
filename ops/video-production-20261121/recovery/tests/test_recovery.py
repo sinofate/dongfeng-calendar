@@ -1,11 +1,24 @@
+import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from recovery_us3day.assparse import parse_ass
 from recovery_us3day.catalog import counts, load_catalog, lookup_name, validate_binding
-from recovery_us3day.compose import build_smoke_ass, render_window, yellow_in_band
-from recovery_us3day.layout import RECONSTRUCTION, measure_extract, observation_matches_frozen, reference_crop, scaled_box
+from recovery_us3day.cli import main
+from recovery_us3day.components import resolve_component
+from recovery_us3day.compose import build_smoke_ass
+from recovery_us3day.fonts import resolve_noto
+from recovery_us3day.produce import produce
+from recovery_us3day.layout import (
+    EXTRACT_SPACE,
+    MASTER_SPACE,
+    RECONSTRUCTION,
+    measure_extract,
+    observation_matches_frozen,
+    plate_crop,
+)
 from recovery_us3day.project import ROOT, build_project, validate_project
 from recovery_us3day.timeline import accumulated_frame_clock, frame_sum, load_timeline, validate_timeline
 
@@ -59,6 +72,9 @@ class AssTests(unittest.TestCase):
         text = build_smoke_ass(ASS, 65.9, 67.0, 65.9, 65.9)
         self.assertNotIn("大约三成", text)
         self.assertNotIn("来源", text)
+        self.assertIn("Noto Sans CJK SC", text)
+        self.assertNotIn("WenQuanYi", text)
+        self.assertIn(",90,90,370,", text)
         self.assertIn("砸到周四低点约九千，算下来", text)
         self.assertNotIn("&H0047D2FF", text)
         for line in text.splitlines():
@@ -122,12 +138,16 @@ class ProjectTests(unittest.TestCase):
         result = validate_project(project, catalog)
         self.assertTrue(result["ok"], result)
         self.assertEqual(len(project["shots"]), 22)
-        self.assertIsNone(project["subtitles"]["revised_lr"])
+        self.assertEqual(project["subtitles"]["later_revision_lr"], 90)
         self.assertEqual(project["subtitles"]["historical_lr"], 30)
+        self.assertEqual(
+            project["subtitles"]["later_revision_evidence"]["md5"],
+            "4887b2bebd4e502ee44f53c0ae132316",
+        )
         self.assertIsNone(project["layout"]["yellow_rule"])
         self.assertFalse(project["output"]["source_corner_labels"])
-        self.assertIsNone(project["shots"][0]["asset"])
-        self.assertIsNone(project["shots"][0]["component_id"])
+        self.assertIsNone(project["shots"][0]["media"])
+        self.assertIsNone(project["shots"][0]["component"]["id"])
         s12 = project["shots"][11]
         self.assertNotIn("大约三成", s12["dialogue"])
         self.assertEqual(s12["t0"], 60.756)
@@ -141,83 +161,158 @@ class ProjectTests(unittest.TestCase):
 class LayoutTests(unittest.TestCase):
     def test_frozen_ink_matches_master_extracts(self):
         title = measure_extract(str(FRAME_02))
-        scaled = {
-            "yellow_title": scaled_box(title["yellow_title"]),
-            "white_top": scaled_box(title["white_top"]),
-        }
-        self.assertEqual(observation_matches_frozen(scaled, tolerance=2), [])
+        native = {"yellow_title": title["yellow_title"], "white_top": title["white_top"]}
+        self.assertEqual(title["width"], 540)
+        self.assertEqual(title["height"], 960)
+        self.assertEqual(observation_matches_frozen(native, tolerance=2), [])
         subtitle = measure_extract(str(FRAME_04))["yellow_subtitle"]
-        scaled_sub = scaled_box(subtitle)
-        want = {
-            "x0": 256,
-            "y0": 1492,
-            "x1": 824,
-            "y1": 1536,
-        }
+        want = EXTRACT_SPACE["subtitle_bright_core"]
         for edge, value in want.items():
-            self.assertAlmostEqual(scaled_sub[edge], value, delta=2)
-        crop = reference_crop()
+            self.assertAlmostEqual(subtitle[edge], value, delta=2)
+        self.assertLess(want["y1"], 960)
+        master = MASTER_SPACE["subtitle_bright_core"]
+        self.assertEqual(master["y0"], want["y0"] * 2)
+        self.assertGreater(master["y0"], 960)
+        full = plate_crop(1080, 1920)
+        small = plate_crop(360, 640)
+        self.assertEqual((full["x"], full["y"], full["w"], full["h"]), (0, 312, 1080, 1128))
+        self.assertEqual((small["y"], small["h"], small["w"]), (104, 376, 360))
+        self.assertNotEqual(full["h"], small["h"])
         stage = RECONSTRUCTION["main_rect"]
-        self.assertEqual(crop["y"] * 3, stage["y"])
-        self.assertEqual((crop["y"] + crop["h"]) * 3, stage["y"] + stage["h"])
-        self.assertLess(282, stage["y"])
-        self.assertGreater(1492, stage["y"] + stage["h"])
+        self.assertLess(MASTER_SPACE["title_l2_white"]["y1"], stage["y"])
+        self.assertGreater(master["y0"], stage["y"] + stage["h"])
+        from recovery_us3day.layout import assert_type_outside_stage
+
+        assert_type_outside_stage()
+
+    def test_normalize_then_window_keeps_bands_empty(self):
+        from recovery_us3day.compose import window_video_chain
+        from recovery_us3day.pixels import load_rgb
+
+        chain = window_video_chain()
+        self.assertIn("scale=1080:1920", chain)
+        self.assertIn("crop=1080:1128:0:312", chain)
+        self.assertNotIn("crop=360:376:0:104", chain)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "window.jpg"
+            source = (
+                "color=c=0xFF0000:s=1080x1920:r=30:d=0.1,"
+                "geq=r='if(lt(Y,312),255,if(lt(Y,1440),0,0))':"
+                "g='if(lt(Y,312),0,if(lt(Y,1440),255,0))':"
+                "b='if(lt(Y,312),0,if(lt(Y,1440),0,255))'"
+            )
+            proc = subprocess.run(
+                [
+                    "ffmpeg", "-y", "-v", "error",
+                    "-f", "lavfi", "-i", source,
+                    "-vf", chain,
+                    "-frames:v", "1",
+                    str(out),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace")[-500:])
+            width, height, raw = load_rgb(out)
+            self.assertEqual((width, height), (1080, 1920))
+
+            def pixel(x, y):
+                offset = (y * width + x) * 3
+                return raw[offset], raw[offset + 1], raw[offset + 2]
+
+            top = pixel(20, 20)
+            middle = pixel(540, 800)
+            bottom = pixel(20, 1800)
+
+            def near_matte(rgb):
+                return abs(rgb[0] - 7) + abs(rgb[1] - 24) + abs(rgb[2] - 41) < 30
+
+            self.assertTrue(near_matte(top), top)
+            self.assertGreater(middle[1], 200)
+            self.assertLess(middle[0], 40)
+            self.assertTrue(near_matte(bottom), bottom)
 
 
 class SmokeTests(unittest.TestCase):
-    def test_short_composites_are_not_the_reference(self):
+    def test_smoke_does_not_pass_without_noto(self):
+        fonts = resolve_noto()
         with tempfile.TemporaryDirectory(prefix="us3day-smoke-") as tmp:
-            out = Path(tmp)
-            opening = render_window(
-                reference=REFERENCE,
-                ass_path=ASS,
-                output=out / "opening.mp4",
-                start=0.0,
-                end=4.0,
-                cover=COVER,
-                cover_until=1.5,
-                protected_dirs=[ROOT / "inputs"],
+            code = main(
+                [
+                    "smoke",
+                    "--allow-reference-plate",
+                    "--reference",
+                    str(REFERENCE),
+                    "--ass",
+                    str(ASS),
+                    "--cover",
+                    str(COVER),
+                    "--out",
+                    tmp,
+                ]
             )
-            comment = render_window(
-                reference=REFERENCE,
-                ass_path=ASS,
-                output=out / "s12.mp4",
-                start=65.9,
-                end=67.0,
-                protected_dirs=[ROOT / "inputs"],
-            )
-            self.assertFalse(opening["recovered_master"])
-            self.assertNotEqual(opening["sha256"], opening["reference_sha256"])
-            self.assertNotEqual(comment["sha256"], comment["reference_sha256"])
-            self.assertEqual(opening["width"], 1080)
-            self.assertEqual(opening["height"], 1920)
-            self.assertAlmostEqual(opening["video_duration"], 4.0, delta=0.08)
-            self.assertAlmostEqual(opening["audio_duration"], opening["video_duration"], delta=0.08)
-            from recovery_us3day.compose import extract_frame
+            if fonts["ok"]:
+                self.assertEqual(code, 2)
+                report = json.loads((Path(tmp) / "smoke_report.json").read_text(encoding="utf-8"))
+                self.assertFalse(report["qualified"])
+                self.assertFalse(report["clearance_verified"])
+                ass_text = (Path(tmp) / "smoke_opening_not_recovered_master.ass").read_text(encoding="utf-8")
+                self.assertIn("Noto Sans CJK SC", ass_text)
+                self.assertNotIn("WenQuanYi", ass_text)
+            else:
+                self.assertEqual(code, 3)
+                report = json.loads((Path(tmp) / "smoke_report.json").read_text(encoding="utf-8"))
+                self.assertEqual(report["status"], "font_missing_not_accepted")
+                self.assertFalse(report["qualified"])
+                self.assertEqual(list(Path(tmp).glob("*.mp4")), [])
 
-            extract_frame(out / "opening.mp4", 2.5, out / "t2.5.jpg")
-            extract_frame(out / "s12.mp4", 0.5, out / "t66.4.jpg")
-            title = RECONSTRUCTION["title_band"]
-            subtitle = RECONSTRUCTION["subtitle_band"]
-            self.assertGreater(yellow_in_band(out / "t2.5.jpg", title["y"], title["y"] + title["h"]), 200)
-            self.assertGreater(yellow_in_band(out / "t2.5.jpg", subtitle["y"], subtitle["y"] + subtitle["h"]), 200)
-            # t=2.5 must be the plate, not the cover still filling the stage.
-            from recovery_us3day.pixels import load_rgb
 
-            width, height, raw = load_rgb(out / "t2.5.jpg")
-            stage = RECONSTRUCTION["main_rect"]
-            red = 0
-            for y in range(stage["y"] + 40, stage["y"] + stage["h"] - 40, 4):
-                row = y * width * 3
-                for x in range(40, width - 40, 4):
-                    offset = row + x * 3
-                    if raw[offset] > 150 and raw[offset + 1] < 80 and raw[offset + 2] < 90:
-                        red += 1
-            self.assertLess(red, 80)
-            self.assertGreater(yellow_in_band(out / "t66.4.jpg", title["y"], title["y"] + title["h"]), 200)
-            self.assertLess(yellow_in_band(out / "t66.4.jpg", subtitle["y"], subtitle["y"] + subtitle["h"]), 30)
-            ass_text = (out / "s12.ass").read_text(encoding="utf-8")
-            self.assertNotIn("大约三成", ass_text)
+class ProductionTests(unittest.TestCase):
+    def test_unfilled_slots_write_no_film(self):
+        project = build_project()
+        catalog = load_catalog(CATALOG)
+        with tempfile.TemporaryDirectory(prefix="us3day-produce-") as tmp:
+            report = produce(project, catalog, Path(tmp))
+            self.assertTrue(report["gaps"])
+            self.assertFalse(report["reference_plate_used"])
+            self.assertEqual(list(Path(tmp).glob("*.mp4")), [])
+            slots = {item["slot"] for item in report["gaps"]}
+            self.assertIn("fonts.noto", slots)
+            self.assertIn("audio.vo", slots)
+            self.assertIn("audio.bgm_plan", slots)
+            self.assertIn("audio.sfx_events", slots)
+            self.assertIn("s01.media", slots)
+            self.assertIn("s12.component", slots)
+
+    def test_filled_component_resolves_source_and_sync(self):
+        catalog = load_catalog(CATALOG)
+        with tempfile.TemporaryDirectory(prefix="us3day-component-") as tmp:
+            folder = Path(tmp) / "count-up"
+            folder.mkdir()
+            (folder / "registry-item.json").write_text("{}", encoding="utf-8")
+            (folder / "count-up.html").write_text("<!-- fixture -->", encoding="utf-8")
+            shot = {
+                "id": "s09",
+                "t0": 52.99,
+                "t1": 55.535,
+                "component": {
+                    "id": "hf_components:count-up",
+                    "variables": {
+                        "start": 0,
+                        "end": 128,
+                        "prefix": "",
+                        "suffix": "%",
+                        "accent": "green",
+                        "glow": False,
+                        "exit": "none",
+                    },
+                },
+            }
+            resolved = resolve_component(catalog, shot, {"hf_components": tmp})
+            self.assertTrue(resolved["ok"], resolved)
+            self.assertEqual(resolved["sync"][0]["id"], "count-land")
+            self.assertAlmostEqual(resolved["sync"][0]["t"], 52.99 + 1.72, places=2)
 
 
 if __name__ == "__main__":

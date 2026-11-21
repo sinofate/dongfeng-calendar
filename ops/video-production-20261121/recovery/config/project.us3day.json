@@ -46,12 +46,25 @@
       "margin_v": 370
     },
     "historical_lr": 30,
-    "revised_lr": null,
+    "historical_lr_layer": "extracted_us3day_final_v1_ass",
+    "later_revision_lr": 90,
+    "later_revision_layer": "evidenced_later_delivery",
+    "later_revision_evidence": {
+      "case": "2026-11-11-openai-anthropic-revenue-race",
+      "ass": "inputs/local-validation/revenue_race_final_v4_ORIGINAL_COPY.ass",
+      "line": 10,
+      "md5": "4887b2bebd4e502ee44f53c0ae132316",
+      "style": "Noto Sans CJK SC, 76, MarginL/R 90, MarginV 370",
+      "warroom_ass_noted_hkt": "2026-11-11T15:06:00+08:00",
+      "delivery_hkt": "2026-11-11T15:11:00+08:00",
+      "film_md5": "bc2438d02897ef555f38a58c5a24ec1c",
+      "not_the_us3day_historical_margin": true
+    },
     "revised_lr_range_documented": [
       80,
       100
     ],
-    "layout_profile": "reconstruction_bands_with_historical_subtitle_style",
+    "layout_profile": "later_revision_lr90_on_reconstructed_bands",
     "dialogue_count": 81,
     "comment_count": 1,
     "comment_texts": [
@@ -81,9 +94,9 @@
     "layer": "reconstructed",
     "title_draw": {
       "layer": "reconstructed",
+      "coordinate_space": "1080x1920",
       "font_requested": "Noto Sans CJK SC",
-      "font_fallback": "WenQuanYi Micro Hei",
-      "font_fallback_reason": "Noto Sans CJK SC is not installed in this environment and the original font file was not in the evidence pack.",
+      "font_fallback_forbidden": true,
       "l1": {
         "text_observed": "芯片砸掉三成",
         "size": 54,
@@ -94,7 +107,7 @@
       "l2": {
         "text_observed": "见底了吗",
         "size": 42,
-        "top": 240,
+        "top": 238,
         "fill": "#FFFFFF",
         "outline": 0
       },
@@ -148,11 +161,22 @@
       }
     }
   },
+  "fonts": {
+    "family": "Noto Sans CJK SC",
+    "regular": null,
+    "bold": null,
+    "known_regular": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "known_bold": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+    "face_index": 2,
+    "substitute_forbidden": true
+  },
   "audio": {
     "vo": null,
-    "bgm": null,
-    "reference_mix": "passthrough_only_when_a_reference_file_is_passed"
+    "bgm_plan": null,
+    "sfx_events": null,
+    "reference_mix": "forbidden_in_production"
   },
+  "library_roots": {},
   "opening": {
     "cover": "inputs/reference/cover_1080x1920.jpg",
     "cover_until_seconds": 1.5,
@@ -172,9 +196,11 @@
       "content_from_suggestion": "封面钩子；大涨、次日芯片跌、能否抄底",
       "method_from_suggestion": "文书：0–1.5 秒封面满幅、轻推约 3%、随后硬切；封面成图可用。动画曲线缺失则只做匀速轻推并标重建；后段在没有原切片时不得冒充原切片。",
       "fallback": "cover_then_text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "选举结果出来那天美股大涨",
         "第二天芯片才崩",
@@ -196,9 +222,11 @@
       "content_from_suggestion": "纠正“宣布即崩”",
       "method_from_suggestion": "对照字卡；缺新闻画面用“误解／实际”纯图形卡。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "好多人以为美国选举一宣布",
         "美股就崩了，错了",
@@ -219,9 +247,11 @@
       "content_from_suggestion": "结果日上涨、次日下跌",
       "method_from_suggestion": "双日时间卡；缺行情素材用无伪造曲线的日期文字卡。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "结果刚落地那天，美股其实大涨",
         "真正砸下来，是转天的事"
@@ -241,9 +271,11 @@
       "content_from_suggestion": "科技股重标价：电费、算力",
       "method_from_suggestion": "气氛底＋两项信息窗；缺图用抽象网格及文字，不标作实拍。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "这事跟你账户里",
         "的科技股直接挂钩",
@@ -266,9 +298,11 @@
       "content_from_suggestion": "周三结果落地、市场释然",
       "method_from_suggestion": "日期／事件卡；缺现场切片用中性事件文字卡。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "先看周三，十一月四号",
         "结果落地，特朗普也接受了",
@@ -291,9 +325,11 @@
       "content_from_suggestion": "分裂政府、油价、道指涨点",
       "method_from_suggestion": "三因素卡；缺获核行情图用数字与口播对应的静态卡。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "分裂政府，历史上往往偏利股市",
         "油价又在暴跌，三件事叠一起",
@@ -315,9 +351,11 @@
       "content_from_suggestion": "周四转问数据中心建设与回本",
       "method_from_suggestion": "问题切换卡；缺设施镜头用抽象机柜示意，不称实景。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "大家以为这事翻篇了，周四",
         "市场换了个问题，不再问谁赢了",
@@ -340,9 +378,11 @@
       "content_from_suggestion": "地方提案、限制倾向、监管预期、芯片领跌",
       "method_from_suggestion": "“提案≠终审法条”证据窗；缺原选票资料用带限定语的文字窗，不伪造文件截图。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "信号从地方冒出来",
         "选票上四十多项跟",
@@ -367,9 +407,11 @@
       "content_from_suggestion": "纳指跌 5.52%、进入修正",
       "method_from_suggestion": "单指标数字卡；缺行情图保留文字数字。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "纳指收跌百分之五点五二",
         "进了修正",
@@ -390,9 +432,11 @@
       "content_from_suggestion": "英伟达跌 9.26%",
       "method_from_suggestion": "单指标卡；缺行情图保留文字数字。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "英伟达收跌百分之九点二六"
       ],
@@ -411,9 +455,11 @@
       "content_from_suggestion": "费城半导体指数跌 12.25%",
       "method_from_suggestion": "指数卡；缺图不用虚构走势图。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "费城半导体指数单日",
         "跌百分之十二点二五"
@@ -433,9 +479,11 @@
       "content_from_suggestion": "十月高点至周四低点；“大约三成”为 ASS Comment",
       "method_from_suggestion": "高低点比较卡；缺核定图仅排台词中的约数。Comment 不当作有效 Dialogue 烧入。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "从十月六日高点约",
         "一万三千三百五十",
@@ -457,9 +505,11 @@
       "content_from_suggestion": "七大科技股市值、需求与建设约束",
       "method_from_suggestion": "数字转论点卡；缺来源切片用文字卡。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "七大科技股",
         "合计蒸发超一万亿美元",
@@ -480,9 +530,11 @@
       "content_from_suggestion": "周五盘中反抽，尚未收盘",
       "method_from_suggestion": "盘中状态卡，显著保留“非收盘结果”；缺盘中画面用文字。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "周五，截至美东下午盘中",
         "芯片股出现反抽，大盘有所回稳",
@@ -504,9 +556,11 @@
       "content_from_suggestion": "非农、预期、失业率、利率定价",
       "method_from_suggestion": "数据并列卡；缺原表格不用仿制官方发布页。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "非农也出来了，据媒体",
         "十月约增十六点五万",
@@ -529,9 +583,11 @@
       "content_from_suggestion": "见底了吗／先听两边",
       "method_from_suggestion": "观点分岔转场；缺人像用姓名文字槽。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "那半导体见底了吗",
         "先听两边吵架",
@@ -552,9 +608,11 @@
       "content_from_suggestion": "汤姆·李偏多观点",
       "method_from_suggestion": "署名观点卡；缺授权照片／原文截图用文字转述，标“观点”。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "Fundstrat的汤姆·李",
         "十一月六日发文偏多",
@@ -578,9 +636,11 @@
       "content_from_suggestion": "丹·艾夫斯前后表态",
       "method_from_suggestion": "双日期观点卡；缺采访切片用文字，不模拟采访画面。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "Yorkville的丹·艾夫斯",
         "十一月三日还说芯片",
@@ -603,9 +663,11 @@
       "content_from_suggestion": "哈特尼特、斯洛克谨慎观点；无一致见底",
       "method_from_suggestion": "双观点卡＋分歧总结；缺原报道用“媒体转述”文字，不伪造引语截图。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "美银的哈特尼特，媒体转述",
         "全球加息没结束就是避险模式",
@@ -632,9 +694,11 @@
       "content_from_suggestion": "作者判断：反抽不足以确认见底",
       "method_from_suggestion": "提取：impact_at=s20.hero_land。落点文案取自建议，不是原动效参数。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "我的判断是，一天盘中反抽",
         "远没补回周四跌幅，多头说机会",
@@ -659,9 +723,11 @@
       "content_from_suggestion": "盯电、选票、监管卡点",
       "method_from_suggestion": "三项检查卡；缺素材用三项纯文字。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "真关心持仓，盯三样，电，选票",
         "监管卡点，这三样缓和了",
@@ -683,9 +749,11 @@
       "content_from_suggestion": "非投资建议、转发收束",
       "method_from_suggestion": "免责声明＋结束卡；缺原尾卡用中性文字卡，保留尾音与完整末字。",
       "fallback": "text_card",
-      "asset": null,
-      "component_id": null,
-      "component_variables": null,
+      "media": null,
+      "component": {
+        "id": null,
+        "variables": null
+      },
       "dialogue": [
         "以上内容不构成投资建议",
         "身边要是有人说选举一宣布就崩",

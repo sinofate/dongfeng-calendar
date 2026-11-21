@@ -43,9 +43,8 @@ def build_project(timeline_path: Path = DEFAULT_TIMELINE, ass_path: Path = DEFAU
                 "content_from_suggestion": suggestion["content"],
                 "method_from_suggestion": suggestion["method"],
                 "fallback": suggestion["fallback"],
-                "asset": None,
-                "component_id": None,
-                "component_variables": None,
+                "media": None,
+                "component": {"id": None, "variables": None},
                 "dialogue": [cue.text for cue in cues],
                 "provenance": suggestion["provenance"],
                 "comment_must_not_burn": suggestion.get("comment_must_not_burn"),
@@ -67,9 +66,22 @@ def build_project(timeline_path: Path = DEFAULT_TIMELINE, ass_path: Path = DEFAU
             "play_res": [ass.play_res_x, ass.play_res_y],
             "historical_style": ass.style.as_extracted(),
             "historical_lr": ass.style.margin_l,
-            "revised_lr": None,
+            "historical_lr_layer": "extracted_us3day_final_v1_ass",
+            "later_revision_lr": 90,
+            "later_revision_layer": "evidenced_later_delivery",
+            "later_revision_evidence": {
+                "case": "2026-11-11-openai-anthropic-revenue-race",
+                "ass": "inputs/local-validation/revenue_race_final_v4_ORIGINAL_COPY.ass",
+                "line": 10,
+                "md5": "4887b2bebd4e502ee44f53c0ae132316",
+                "style": "Noto Sans CJK SC, 76, MarginL/R 90, MarginV 370",
+                "warroom_ass_noted_hkt": "2026-11-11T15:06:00+08:00",
+                "delivery_hkt": "2026-11-11T15:11:00+08:00",
+                "film_md5": "bc2438d02897ef555f38a58c5a24ec1c",
+                "not_the_us3day_historical_margin": True,
+            },
             "revised_lr_range_documented": [80, 100],
-            "layout_profile": "reconstruction_bands_with_historical_subtitle_style",
+            "layout_profile": "later_revision_lr90_on_reconstructed_bands",
             "dialogue_count": len(ass.dialogues),
             "comment_count": len(ass.comments),
             "comment_texts": [event.text for event in ass.comments],
@@ -83,7 +95,22 @@ def build_project(timeline_path: Path = DEFAULT_TIMELINE, ass_path: Path = DEFAU
             "title_draw": TITLE_DRAW,
             "colors": COLORS,
         },
-        "audio": {"vo": None, "bgm": None, "reference_mix": "passthrough_only_when_a_reference_file_is_passed"},
+        "fonts": {
+            "family": "Noto Sans CJK SC",
+            "regular": None,
+            "bold": None,
+            "known_regular": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "known_bold": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+            "face_index": 2,
+            "substitute_forbidden": True,
+        },
+        "audio": {
+            "vo": None,
+            "bgm_plan": None,
+            "sfx_events": None,
+            "reference_mix": "forbidden_in_production",
+        },
+        "library_roots": {},
         "opening": {
             "cover": str(DEFAULT_COVER.relative_to(ROOT)),
             "cover_until_seconds": 1.5,
@@ -126,18 +153,19 @@ def validate_project(project: dict, catalog: dict | None = None) -> dict:
     if shots and shots[-1]["t1"] != project["timeline"]["total"]:
         errors.append("last shot does not end on the timeline total")
     for shot in shots:
-        if shot.get("component_id"):
+        component = shot.get("component") or {}
+        if component.get("id"):
             if catalog is None:
-                errors.append(f"{shot['id']} binds {shot['component_id']} but no catalog was loaded")
+                errors.append(f"{shot['id']} binds {component['id']} but no catalog was loaded")
             else:
                 result = validate_binding(
                     catalog,
-                    {"id": shot["component_id"], "variables": shot.get("component_variables") or {}},
+                    {"id": component["id"], "variables": component.get("variables") or {}},
                 )
                 if not result["ok"]:
                     errors.append(f"{shot['id']} component: {result['errors']}")
-        if shot.get("asset") is not None and not isinstance(shot["asset"], str):
-            errors.append(f"{shot['id']} asset must be a path or null")
+        if shot.get("media") is not None and not isinstance(shot["media"], str):
+            errors.append(f"{shot['id']} media must be a path or null")
         for line in shot.get("dialogue") or []:
             if line == "大约三成":
                 errors.append(f"{shot['id']} dialogue list contains the ASS comment 大约三成")
@@ -146,8 +174,13 @@ def validate_project(project: dict, catalog: dict | None = None) -> dict:
     style = project["subtitles"]["historical_style"]
     if style["margin_l"] != 30 or style["margin_r"] != 30:
         errors.append("historical MarginL/R was rewritten")
-    if project["subtitles"]["revised_lr"] is not None:
-        warnings.append("revised_lr is set; this recovery did not have a single approved value")
+    if project["subtitles"].get("historical_lr") != 30:
+        errors.append("historical MarginL/R must stay 30")
+    if project["subtitles"].get("later_revision_lr") != 90:
+        errors.append("later revision MarginL/R must stay 90")
+    evidence = project["subtitles"].get("later_revision_evidence") or {}
+    if evidence.get("md5") != "4887b2bebd4e502ee44f53c0ae132316":
+        errors.append("later revision is missing the revenue-race ASS md5")
     if project["layout"]["yellow_rule"] is not None:
         errors.append("a yellow rule coordinate was invented")
     if project["output"].get("source_corner_labels"):

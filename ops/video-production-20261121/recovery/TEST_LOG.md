@@ -1,35 +1,29 @@
 # 测试日志
 
-环境：Python 3.12.3，ffmpeg 6.1.1-3ubuntu5。无 pip 依赖。没有调用 Claude、e7y 或 Suno。
+环境：Python 3.12.3，ffmpeg 6.1.1。这台云端没有
+`/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc` 和
+`NotoSansCJK-Bold.ttc`。文泉驿不再写入生成 ASS，也不再当作验收字体。
 
-## unittest
+## 本机上一轮不能算通过
+
+2026-11-21 13:15 HKT 在原 1080×1920 母带上跑过 `validate`、8 项测试和 `smoke`，三次都是 exit 0。那个 exit 0 不合格：
+
+- 生成 ASS 第 10–12 行写的是 `WenQuanYi Micro Hei`。
+- 裁切按 360p 的 y104/h376 套到 1080p 上，主窗被放大，右上留下旧黄字碎片。
+- 报告文案把这次输入说成低码率参考片。实际探测是 1080×1920、30fps、150.566667 秒。
+
+证据在 `inputs/local-validation/`。
+
+## 这一轮
 
 ```
 python3 -m unittest tests.test_recovery -v
-test_dialogue_and_comment_are_split ... ok
-test_smoke_ass_skips_comment_and_source_badge ... ok
-test_counts_come_from_the_index ... ok
-test_schema_rejects_wrapper_coercion_and_stand_ins ... ok
-test_frozen_ink_matches_master_extracts ... ok
-test_project_joins_suggestion_to_timeline_clock ... ok
-test_short_composites_are_not_the_reference ... ok
-test_clock_uses_seconds_and_reports_frame_gap ... ok
-Ran 8 tests in 2.052s
-OK
 ```
 
-集成测试实际跑了 ffmpeg：开场 4.0 秒 1080×1920 30fps，音画时长都是 4.0 秒；s12 窗口 1.1 秒。输出哈希与参考片 `fe69c7509c1d…` 不同。t=2.5 的主窗口红色晶圆像素被断言为不是封面。t=66.4 字幕带黄色像素为 0，「大约三成」不在烧录 ASS 里。
+检查：540 坐标和 1080 坐标分开；1080 裁切是 y312/h1128，360 裁切才是 y104/h376；生成 ASS 使用 Noto Sans CJK SC 和 MarginL/R 90；没有 Noto 文件时 `smoke` 退出码 3 且不写 mp4；`produce` 在媒体、口播、BGM、音效、组件都未填时不写 mp4。历史边距 30 仍留在母本样式里。
 
-## smoke 报告摘要
+本机有 Noto 时，`smoke` 可以写出诊断片，但退出码是 2。烧字母带不能证明干净切片的观感，退出码不是验收通过。
 
-`python3 -m recovery_us3day smoke --allow-reference-plate --out out/smoke`
+## 本机观看后的窗口修正
 
-- status: `smoke_composite_on_reference_plate`
-- recovered_master: false
-- acceptance_recovered_film: false
-- opening 1080×1920，30/1，视频 4.0s，音频 4.0s
-- s12 窗口 1.1s
-- 黄色像素：开场 2.5 秒页头 3139、字幕带 7487；66.4 秒页头 3205、字幕带 0
-- historical MarginL/R 30 被沿用，revised_lr 未锁定
-
-静帧见 `test-output/`。这不是全片验收，原切片和 vo_raw 仍然缺失。
+观看结论写进 `GAPS.md`：1.5 秒后主窗极度放大，白卡右侧被截，右上有旧黄标题残笔；原底部字幕被裁掉，所以没有第二条黄字幕；新标题和字幕叠在满屏画面里。合成改为先把整帧缩放到 1080×1920，再取 y312–1440。色带测试确认上下带不再吃进画面的红/蓝。对 t2.5 抽帧做了同路径窗口，信息卡四个指数都在窗口里，来源行仍在，见 `test-output/geometry_window_t2.5_not_a_film.jpg`。标题字号从亮核估计的 54/42 改为重建 88/64，仍在主窗上方。这台环境没有 Noto，没有把这次窗口静帧写成字体验收。

@@ -11,25 +11,43 @@ from .pixels import is_white, is_yellow, load_rgb, mask_bbox
 
 CANVAS = {"w": 1080, "h": 1920, "fps": 30, "layer": "extracted", "source": "master ffprobe"}
 
-# 540×960 extracts scale by 2 onto 1080×1920. Thresholds match pixels.is_yellow / is_white.
-OBSERVED_INK = {
-    "layer": "observed_on_scaled_jpeg",
+# Two spaces. Do not read a master-space y through a 540-tall image.
+# frame_02/04 are 540×960 extracts of the 1080×1920 master, so master px = extract px × 2.
+EXTRACT_SPACE = {
+    "space": "540x960",
+    "layer": "observed_on_extract_jpeg",
+    "width": 540,
+    "height": 960,
     "source_frames": [
         "inputs/reference/frame_02.jpg",
         "inputs/reference/frame_04.jpg",
     ],
-    "scale_from_extract": 2,
-    "uncertainty_px": 4,
+    "uncertainty_px": 2,
     "not_a_source_coordinate": True,
-    "title_l1_yellow": {"x0": 352, "y0": 152, "x1": 726, "y1": 206},
-    "title_l2_white": {"x0": 440, "y0": 240, "x1": 638, "y1": 282},
-    "subtitle_bright_core": {"x0": 256, "y0": 1492, "x1": 824, "y1": 1536},
-    "title_l1_median_rgb": [250, 217, 79],
+    "title_l1_yellow": {"x0": 176, "y0": 76, "x1": 363, "y1": 104},
+    "title_l2_white": {"x0": 220, "y0": 119, "x1": 319, "y1": 142},
+    "subtitle_bright_core": {"x0": 128, "y0": 745, "x1": 412, "y1": 768},
+}
+MASTER_SPACE = {
+    "space": "1080x1920",
+    "layer": "extract_multiplied_by_2",
+    "width": 1080,
+    "height": 1920,
+    "scale_from_extract": 2,
+    "not_measured_on_the_540_image": True,
+    "title_l1_yellow": {"x0": 352, "y0": 152, "x1": 726, "y1": 208},
+    "title_l2_white": {"x0": 440, "y0": 238, "x1": 638, "y1": 284},
+    "subtitle_bright_core": {"x0": 256, "y0": 1490, "x1": 824, "y1": 1536},
     "notes": [
-        "Bright-core boxes are smaller than an em box. ASS fontsize 76 with MarginV 370 puts the subtitle em center near y=1512, which matches this core.",
-        "JPEG median yellow is not the fill token. The burn uses ASS #FFD700.",
-        "Documented L1 y130 / L2 y220 and title_band y150–290 are a different record. They are not these boxes.",
+        "y1490–1536 is a 1080×1920 coordinate. The same ink on the 540×960 extract is y745–768.",
+        "ASS fontsize 76 and MarginV 370 put the subtitle em center near master y=1512, which matches this scaled core.",
+        "Documented L1 y130 / L2 y220 and title_band y150–290 are a third record, in master space, and are not these boxes.",
     ],
+}
+# Backward-looking alias. Values are master space, not extract space.
+OBSERVED_INK = {
+    **MASTER_SPACE,
+    "extract_space": EXTRACT_SPACE,
 }
 
 # Padded so the extracted subtitle em (top about 1474, outline 5) and the observed
@@ -95,28 +113,73 @@ COLORS = {
 # Reconstruction type metrics taken from observed ink height, not from a font file.
 TITLE_DRAW = {
     "layer": "reconstructed",
+    "coordinate_space": "1080x1920",
     "font_requested": "Noto Sans CJK SC",
-    "font_fallback": "WenQuanYi Micro Hei",
-    "font_fallback_reason": "Noto Sans CJK SC is not installed in this environment and the original font file was not in the evidence pack.",
-    "l1": {"text_observed": "芯片砸掉三成", "size": 54, "top": 152, "fill": "#FFD700", "outline": 0},
-    "l2": {"text_observed": "见底了吗", "size": 42, "top": 240, "fill": "#FFFFFF", "outline": 0},
+    "font_fallback_forbidden": True,
+    "l1": {
+        "text_observed": "芯片砸掉三成",
+        "size": 88,
+        "top": 72,
+        "fill": "#FFD700",
+        "outline": 0,
+        "size_layer": "reconstructed_after_20261121_viewing",
+        "note": "Bright-core height on the master is about 56px. The local viewing of the 54px burn found the header too small, so the draw size fills the title band and stays above the stage.",
+    },
+    "l2": {
+        "text_observed": "见底了吗",
+        "size": 64,
+        "top": 188,
+        "fill": "#FFFFFF",
+        "outline": 0,
+        "size_layer": "reconstructed_after_20261121_viewing",
+    },
     "sample_times_seconds": [2.0, 4.0, 15.0, 60.0, 100.0, 140.0],
     "not_every_frame_verified": True,
 }
 
 
-def reference_crop() -> dict:
-    """Crop of a 360×640 reference that corresponds to the reconstructed stage."""
+def assert_type_outside_stage() -> None:
+    """Title and subtitle boxes must sit outside the stage on the 1080×1920 canvas."""
     stage = RECONSTRUCTION["main_rect"]
-    scale = RECONSTRUCTION["reference_plate_scale"]
-    if stage["y"] % scale or stage["h"] % scale or stage["w"] % scale:
-        raise ValueError("reconstructed stage is not on the reference pixel grid")
+    stage_bottom = stage["y"] + stage["h"]
+    for key in ("l1", "l2"):
+        line = TITLE_DRAW[key]
+        bottom = line["top"] + line["size"]
+        if line["top"] < 0 or bottom > stage["y"]:
+            raise ValueError(f"title {key} intersects the stage: {line['top']}–{bottom} vs stage y {stage['y']}")
+    subtitle_bottom = CANVAS["h"] - 370
+    subtitle_top = subtitle_bottom - 76 - 5
+    if subtitle_top < stage_bottom:
+        raise ValueError(f"subtitle top {subtitle_top} enters the stage ending at {stage_bottom}")
+
+
+def plate_crop(input_w: int, input_h: int) -> dict:
+    """Map the 1080×1920 stage onto the actual input frame.
+
+    A 360×640 reference and a 1080×1920 master do not share a crop rectangle.
+    Using the 360p crop on the master zooms the top of the picture and leaves
+    scraps of the old yellow title inside the stage.
+    """
+    if input_w <= 0 or input_h <= 0:
+        raise ValueError(f"bad input size {input_w}x{input_h}")
+    stage = RECONSTRUCTION["main_rect"]
+    canvas_w = CANVAS["w"]
+    canvas_h = CANVAS["h"]
+    x = int(round(stage["x"] * input_w / canvas_w))
+    y = int(round(stage["y"] * input_h / canvas_h))
+    w = int(round(stage["w"] * input_w / canvas_w))
+    h = int(round(stage["h"] * input_h / canvas_h))
+    if w < 2 or h < 2 or x < 0 or y < 0 or x + w > input_w or y + h > input_h:
+        raise ValueError(f"stage crop {x},{y},{w},{h} does not fit {input_w}x{input_h}")
     return {
-        "x": stage["x"] // scale,
-        "y": stage["y"] // scale,
-        "w": stage["w"] // scale,
-        "h": stage["h"] // scale,
-        "scale": scale,
+        "x": x,
+        "y": y,
+        "w": w,
+        "h": h,
+        "input_w": input_w,
+        "input_h": input_h,
+        "space": f"{input_w}x{input_h}",
+        "mapped_from": "1080x1920 main_rect",
     }
 
 
@@ -146,14 +209,15 @@ def scaled_box(box: dict | None, scale: int = 2) -> dict | None:
     }
 
 
-def observation_matches_frozen(measured_scaled: dict, tolerance: int = 4) -> list[str]:
+def observation_matches_frozen(measured_extract: dict, tolerance: int = 2) -> list[str]:
+    """Compare boxes measured on the 540×960 extract, in that image's own pixels."""
     expected = {
-        "yellow_title": OBSERVED_INK["title_l1_yellow"],
-        "white_top": OBSERVED_INK["title_l2_white"],
+        "yellow_title": EXTRACT_SPACE["title_l1_yellow"],
+        "white_top": EXTRACT_SPACE["title_l2_white"],
     }
     errors = []
     for key, want in expected.items():
-        got = measured_scaled.get(key)
+        got = measured_extract.get(key)
         if not got:
             errors.append(f"missing {key}")
             continue
